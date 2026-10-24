@@ -14,7 +14,13 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --runInBand",
     "build": "expo export --platform android --platform web",
-    "check": "npm run lint && npm run typecheck && npm test"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "test:db": "node scripts/test-database.mjs",
+    "db:types": "node scripts/generate-types.mjs",
+    "test:services": "node scripts/test-services.mjs",
+    "test:edge": "deno test --allow-read --config supabase/functions/deno.json supabase/functions/_shared/pdf_test.ts",
+    "check:edge": "deno check --config supabase/functions/deno.json supabase/functions/verify-receipt/index.ts supabase/functions/parse-receipt/index.ts",
+    "test:auth": "node scripts/test-auth.mjs"
   },
   "dependencies": {
     "@react-native-community/netinfo": "12.0.1",
@@ -43,11 +49,14 @@
     "@types/jest": "30.0.0",
     "@types/pg": "8.23.1",
     "@types/react": "~19.3.0",
+    "deno": "2.9.6",
     "eslint": "9.39.5",
     "eslint-config-expo": "~58.0.4",
     "jest": "30.5.2",
     "jest-expo": "~58.0.12",
+    "pdf-lib": "1.17.1",
     "pg": "8.23.1",
+    "prettier": "3.9.10",
     "tsx": "4.23.15",
     "typescript": "~6.0.3"
   }

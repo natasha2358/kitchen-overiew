@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+export async function testInventory(db, ctx) {
+  const { a,b,h,h2,asUser,denied } = ctx;
+  await asUser(a);
+  const location = (await db.query('select id from public.storage_locations where household_id=$1 limit 1',[h])).rows[0].id;
+  const create = { action:'create', name:'  Brown   Rice ', base_unit:'g', quantity:'1000', package_count:2, package_size:'500', location_id:location };
+  const operation = randomUUID();
+  const call = async (op,request,household=h) => (await db.query('select public.mutate_inventory($1,$2,$3) as result',[household,op,request])).rows[0].result;
+  const initial = await call(operation,create);
+  assert.equal(initial.quantity,'1000.000000'); assert.deepEqual(await call(operation,create),initial);
+  await denied('select public.mutate_inventory($1,$2,$3)',[h,operation,{...create,quantity:'2'}]);
+  assert.equal((await db.query('select * from public.stock_movements')).rowCount,1);
+  const waste = { action:'waste', batch_id:initial.batch_id, revision:1, base_unit:'g', quantity:'250' };
+  const result = await call(randomUUID(),waste);assert.equal(result.quantity,'750.000000');assert.equal(result.revision,2);
+  const badRequests=[waste,{...waste,revision:2,quantity:'751'},{...waste,revision:2,base_unit:'ml'},{...waste,revision:2,quantity:'0.0000001'},{...waste,revision:2,quantity:'NaN'}];
+  for(const request of badRequests) await denied('select public.mutate_inventory($1,$2,$3)',[h,randomUUID(),request]);
+  await denied('update public.inventory_batches set quantity=999');await denied('delete from public.stock_movements');await denied('delete from public.inventory_operations');
+  const product=(await db.query('select product_id from public.inventory_batches where id=$1',[initial.batch_id])).rows[0].product_id;
+  await denied("update public.products set base_unit='ml' where id=$1",[product]);
+  await denied('delete from public.products where id=$1',[product]);await denied('delete from public.storage_locations where id=$1',[location]);
+  await denied('select public.mutate_inventory($1,$2,$3)',[h,randomUUID(),{...create,name:'Eggs',base_unit:'item',quantity:'1.5',package_count:1,package_size:'1.5'}]);
+  assert.equal((await db.query("select * from public.products where name='Eggs'")).rowCount,0,'failed batch rolls back product');
+  await asUser(b);
+  const locationB=(await db.query('select id from public.storage_locations limit 1')).rows[0].id;
+  assert.equal((await db.query('select * from public.inventory_batches')).rowCount,0);
+  assert.deepEqual((await db.query('select public.get_inventory($1) as data',[h])).rows[0].data,[]);
+  await denied('select public.mutate_inventory($1,$2,$3)',[h,randomUUID(),waste]);
+  await denied('select public.mutate_inventory($1,$2,$3)',[h2,randomUUID(),{...create,product_id:product,location_id:locationB}]);
+  await asUser(a);
+  await denied('select public.mutate_inventory($1,$2,$3)',[h,randomUUID(),{action:'move',batch_id:initial.batch_id,revision:2,base_unit:'g',location_id:locationB}]);
+  const removed=await call(randomUUID(),{action:'remove',batch_id:initial.batch_id,revision:2,base_unit:'g'});assert.equal(removed.quantity,'0.000000');
+  const all=(await db.query('select public.get_inventory($1) as data',[h])).rows[0].data;assert.equal(all.length,1);assert.equal(all[0].quantity,'0.000000');
+  const ledger=(await db.query('select public.get_batch_history($1,$2) as data',[h,initial.batch_id])).rows[0].data;assert.equal(ledger.length,3);
+  // Inject a transaction failure at the last write and prove balances/operations roll back.
+  await db.query('reset role');
+  await db.query("create function private.test_fail_movement() returns trigger language plpgsql as $$ begin raise exception 'injected test failure'; end $$");
+  await db.query('create trigger test_fail_movement before insert on public.stock_movements for each row execute function private.test_fail_movement()');
+  await asUser(a); const failedOp=randomUUID();
+  await denied('select public.mutate_inventory($1,$2,$3)',[h,failedOp,{action:'add',batch_id:initial.batch_id,revision:3,base_unit:'g',quantity:'10'}]);
+  assert.equal((await db.query('select quantity::text from public.inventory_batches where id=$1',[initial.batch_id])).rows[0].quantity,'0.000000');
+  assert.equal((await db.query('select * from public.inventory_operations where id=$1',[failedOp])).rowCount,0);
+  await db.query('reset role'); await db.query('drop trigger test_fail_movement on public.stock_movements');await db.query('drop function private.test_fail_movement()');
+}

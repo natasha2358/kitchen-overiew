@@ -3,12 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "types": [
-      "jest",
-      "react",
-      "react-native",
-      "node"
-    ]
+    "types": ["jest", "react", "react-native", "node"]
   },
   "include": [
     "app/**/*.ts",
@@ -18,7 +13,5 @@
     "tests/**/*.ts",
     "tests/**/*.tsx"
   ],
-  "exclude": [
-    "supabase/functions"
-  ]
+  "exclude": ["supabase/functions"]
 }
