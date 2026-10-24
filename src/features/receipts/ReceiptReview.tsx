@@ -1,3 +1,4 @@
+import { runOperation, readOperation } from "../../shared/operation-intent";
 import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,15 @@ import {
 function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
   const [lines, setLines] = useState<ReceiptLine[]>(receipt.lines);
   const [revision, setRevision] = useState(receipt.revision);
+  const [metadata, setMetadata] = useState({
+    merchant: receipt.merchant ?? "",
+    receipt_number: receipt.receipt_number ?? "",
+    purchased_on: receipt.purchased_on ?? "",
+    total: receipt.total ?? "",
+    currency: receipt.currency ?? "",
+  });
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [deleteRequested, setDeleteRequested] = useState(false);
   const [source, setSource] = useState("");
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -53,6 +63,9 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
       const r = await backend().rpc("save_receipt_review", {
         p_receipt: receipt.id,
         p_revision: revision,
+        p_metadata: Object.fromEntries(
+          Object.entries(metadata).map(([k, v]) => [k, v.trim() || null]),
+        ),
         p_lines: valid.map(({ proposed, ...line }) => line),
       });
       if (r.error) throw r.error;
@@ -81,9 +94,82 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
       const latest = receiptReviewSchema.parse(result.data);
       setLines(latest.lines);
       setRevision(latest.revision);
+      setMetadata({
+        merchant: latest.merchant ?? "",
+        receipt_number: latest.receipt_number ?? "",
+        purchased_on: latest.purchased_on ?? "",
+        total: latest.total ?? "",
+        currency: latest.currency ?? "",
+      });
+      setAcknowledged(false);
       setDirty(false);
       setNotice("Latest saved review loaded.");
       client.setQueryData(["receipt", h.data?.id, receipt.id], latest);
+    } catch (e) {
+      setError(messageOf(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function confirm() {
+    setBusy(true);
+    setError("");
+    try {
+      if (!online || !h.data) throw new Error("Reconnect first.");
+      const key = `receipt-confirm.${h.data.id}.${receipt.id}`;
+      const pending = await readOperation(key);
+      const request = pending?.request ?? {
+        receipt_id: receipt.id,
+        revision,
+        acknowledged: acknowledged ? receipt.duplicates.map((d) => d.id) : [],
+      };
+      await runOperation(
+        key,
+        pending?.operation ?? randomUUID(),
+        request,
+        async (operation, payload) => {
+          const args = z
+            .object({
+              receipt_id: z.uuid(),
+              revision: z.number().int(),
+              acknowledged: z.array(z.uuid()),
+            })
+            .parse(payload);
+          const result = await backend().rpc("confirm_receipt", {
+            p_receipt: args.receipt_id,
+            p_revision: args.revision,
+            p_operation: operation,
+            p_acknowledged: args.acknowledged,
+          });
+          if (result.error) throw result.error;
+          return result.data;
+        },
+      );
+      setNotice("Receipt confirmed. Inventory updated.");
+      await client.invalidateQueries();
+    } catch (e) {
+      setError(messageOf(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function deleteSource() {
+    setBusy(true);
+    setError("");
+    try {
+      if (!online) throw new Error("Reconnect first.");
+      const result = await backend().functions.invoke("delete-receipt-source", {
+        body: { receipt_id: receipt.id },
+      });
+      if (result.error) throw result.error;
+      z.object({ deleted: z.literal(true) }).parse(result.data);
+      setNotice(
+        "Source PDF deleted. Import identity and stock history retained.",
+      );
+      setDeleteRequested(false);
+      await client.invalidateQueries({
+        queryKey: ["receipt", h.data?.id, receipt.id],
+      });
     } catch (e) {
       setError(messageOf(e));
     } finally {
@@ -167,7 +253,67 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
         )}
       </Card>
       {receipt.status !== "uploading" && (
+        <Card>
+          <Body>
+            {receipt.source_deleted
+              ? "Source PDF deleted; receipt identity retained."
+              : "The private source PDF is retained."}
+          </Body>
+          {!receipt.source_deleted && (
+            <Button
+              title={
+                deleteRequested
+                  ? "Confirm source PDF deletion / retry"
+                  : "Delete source PDF…"
+              }
+              onPress={() =>
+                deleteRequested ? void deleteSource() : setDeleteRequested(true)
+              }
+              disabled={busy || !online}
+            />
+          )}
+          {deleteRequested && (
+            <Button
+              title="Cancel deletion"
+              onPress={() => setDeleteRequested(false)}
+              disabled={busy}
+            />
+          )}
+          {receipt.confirmation && (
+            <Body>
+              Confirmed: {receipt.confirmation.batches.length} inventory
+              batches. This receipt cannot be added twice.
+            </Body>
+          )}
+        </Card>
+      )}
+      {receipt.status !== "uploading" && receipt.status !== "confirmed" && (
         <>
+          <Card>
+            <Body>
+              Optional receipt details help detect possible duplicates. Leave
+              missing values blank.
+            </Body>
+            {(Object.keys(metadata) as (keyof typeof metadata)[]).map((key) => (
+              <Field
+                key={key}
+                label={
+                  key === "purchased_on"
+                    ? "Purchase date (YYYY-MM-DD)"
+                    : key === "currency"
+                      ? "Currency (three-letter code)"
+                      : key.replaceAll("_", " ")
+                }
+                value={metadata[key]}
+                editable={!busy}
+                onChangeText={(value) => {
+                  setMetadata((old) => ({ ...old, [key]: value }));
+                  setDirty(true);
+                  setAcknowledged(false);
+                }}
+              />
+            ))}
+          </Card>
           {lines.map((line) => (
             <Card key={line.id}>
               <Body>Source: {line.source_label}</Body>
@@ -274,9 +420,32 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
               onPress={() => void save()}
               disabled={busy || !online || !dirty}
             />
+            {receipt.duplicates.map((d) => (
+              <Body key={d.id}>
+                Possible duplicate: {d.filename} ({d.status})
+              </Body>
+            ))}
+            {receipt.duplicates.length > 0 && (
+              <Button
+                title={
+                  acknowledged
+                    ? "✓ These are separate purchases"
+                    : "Acknowledge these are separate purchases"
+                }
+                onPress={() => setAcknowledged((v) => !v)}
+                disabled={busy || dirty}
+              />
+            )}
+            <Button
+              title="Confirm saved receipt into inventory / retry"
+              onPress={() => void confirm()}
+              disabled={
+                busy || !online || dirty || receipt.status !== "review_ready"
+              }
+            />
             <Body>
-              Adding reviewed lines to inventory is not enabled in this
-              foundation.
+              Confirmation adds all included saved lines once. If a response is
+              lost, retry uses the original request.
             </Body>
           </Card>
         </>

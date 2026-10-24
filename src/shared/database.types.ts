@@ -93,6 +93,7 @@ export type Database = {
           package_size: number | null
           product_id: string
           quantity: number
+          receipt_line_id: string | null
           revision: number
         }
         Insert: {
@@ -106,6 +107,7 @@ export type Database = {
           package_size?: number | null
           product_id: string
           quantity: number
+          receipt_line_id?: string | null
           revision?: number
         }
         Update: {
@@ -119,6 +121,7 @@ export type Database = {
           package_size?: number | null
           product_id?: string
           quantity?: number
+          receipt_line_id?: string | null
           revision?: number
         }
         Relationships: [
@@ -142,6 +145,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["household_id", "id", "base_unit"]
+          },
+          {
+            foreignKeyName: "inventory_batches_household_id_receipt_line_id_fkey"
+            columns: ["household_id", "receipt_line_id"]
+            isOneToOne: false
+            referencedRelation: "receipt_lines"
+            referencedColumns: ["household_id", "id"]
           },
         ]
       }
@@ -218,39 +228,66 @@ export type Database = {
       receipt_imports: {
         Row: {
           canonical_id: string | null
+          confirmation: Json | null
           created_at: string
+          currency: string | null
+          deletion_token: string | null
           filename: string
           household_id: string
           id: string
+          merchant: string | null
           object_path: string
+          purchased_on: string | null
+          receipt_number: string | null
           revision: number
+          source_deleted_at: string | null
+          source_path: string | null
           status: string
+          total: number | null
           upload_operation: string
           uploaded_by: string
           verified_hash: string | null
         }
         Insert: {
           canonical_id?: string | null
+          confirmation?: Json | null
           created_at?: string
+          currency?: string | null
+          deletion_token?: string | null
           filename: string
           household_id: string
           id?: string
+          merchant?: string | null
           object_path: string
+          purchased_on?: string | null
+          receipt_number?: string | null
           revision?: number
+          source_deleted_at?: string | null
+          source_path?: string | null
           status?: string
+          total?: number | null
           upload_operation: string
           uploaded_by: string
           verified_hash?: string | null
         }
         Update: {
           canonical_id?: string | null
+          confirmation?: Json | null
           created_at?: string
+          currency?: string | null
+          deletion_token?: string | null
           filename?: string
           household_id?: string
           id?: string
+          merchant?: string | null
           object_path?: string
+          purchased_on?: string | null
+          receipt_number?: string | null
           revision?: number
+          source_deleted_at?: string | null
+          source_path?: string | null
           status?: string
+          total?: number | null
           upload_operation?: string
           uploaded_by?: string
           verified_hash?: string | null
@@ -421,10 +458,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      begin_receipt_deletion: { Args: { p_receipt: string }; Returns: Json }
       bootstrap_household: { Args: { p_timezone?: string }; Returns: string }
+      confirm_receipt: {
+        Args: {
+          p_acknowledged?: string[]
+          p_operation: string
+          p_receipt: string
+          p_revision: number
+        }
+        Returns: Json
+      }
       finalize_receipt_upload: {
         Args: { p_hash: string; p_receipt: string; p_user: string }
         Returns: Json
+      }
+      finish_receipt_deletion: {
+        Args: { p_receipt: string; p_token: string; p_user: string }
+        Returns: undefined
       }
       get_batch_history: {
         Args: { p_batch: string; p_household: string }
@@ -441,8 +492,17 @@ export type Database = {
         Args: { p_filename: string; p_household: string; p_operation: string }
         Returns: Json
       }
+      receipt_duplicate_candidates: {
+        Args: { p_receipt: string }
+        Returns: Json
+      }
       save_receipt_review: {
-        Args: { p_lines: Json; p_receipt: string; p_revision: number }
+        Args: {
+          p_lines: Json
+          p_metadata?: Json
+          p_receipt: string
+          p_revision: number
+        }
         Returns: number
       }
     }

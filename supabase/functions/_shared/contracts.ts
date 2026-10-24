@@ -28,8 +28,37 @@ export const receiptReviewSchema = z.object({
   id: z.uuid(),
   revision: z.number().int().positive(),
   filename: z.string(),
-  status: z.enum(["uploading", "uploaded", "review_ready", "duplicate"]),
+  status: z.enum([
+    "uploading",
+    "uploaded",
+    "review_ready",
+    "duplicate",
+    "confirmed",
+  ]),
   canonical_id: z.uuid().nullable(),
+  merchant: z.string().nullable(),
+  receipt_number: z.string().nullable(),
+  purchased_on: z.iso.date().nullable(),
+  total: z.string().nullable(),
+  currency: z.string().nullable(),
+  source_deleted: z.boolean(),
+  confirmation: z
+    .object({
+      receipt_id: z.uuid(),
+      operation_id: z.uuid(),
+      batches: z.array(
+        z.object({
+          batch_id: z.uuid(),
+          line_id: z.uuid(),
+          quantity: z.string(),
+          base_unit: z.string(),
+        }),
+      ),
+    })
+    .nullable(),
+  duplicates: z.array(
+    z.object({ id: z.uuid(), filename: z.string(), status: z.string() }),
+  ),
   lines: z.array(receiptLineSchema).max(200),
 });
 export const extractionProposalSchema = z

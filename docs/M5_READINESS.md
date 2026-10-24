@@ -1,6 +1,6 @@
 # Readiness for M5: receipt confirmation
 
-M5 has not started. Preparation targets confirmation of **manually reviewed** receipts; it does not claim automatic extraction or supermarket-format coverage. Testing remains paused by explicit user instruction.
+M5 implementation is now present; its exit gate remains unverified. Preparation targets confirmation of **manually reviewed** receipts; it does not claim automatic extraction or supermarket-format coverage. Testing remains paused by explicit user instruction.
 
 ## Implemented prerequisites
 
@@ -28,8 +28,10 @@ The transaction must lock the canonical receipt, return an existing confirmation
 
 M5 still needs versioned schema changes for confirmation state/result, receipt-line batch provenance, and merchant/receipt/date/total/currency metadata used for possible-duplicate warnings. The current hash detects identical bytes only; filename equality is not a semantic duplicate test.
 
-Source deletion must run through an ownership-checked server workflow and retain hash, confirmation identity and ledger history. No source-deletion or confirmation operation is implemented by this preparation task.
+Source deletion must run through an ownership-checked server workflow and retain hash, confirmation identity and ledger history. Migration 005 and the review UI implement confirmation and source deletion; behavioral verification is pending.
 
 ## Separate unfinished M4 work
 
 Real supermarket fixtures, embedded-text extraction/model selection, bounded AI calls, leases, late-result rejection and measured extraction quality remain outstanding. `parse-receipt` must continue returning its explicit configuration boundary until those prerequisites are met. No client-side model key is needed for manual review or confirmation.
+
+See the M5 checkpoint in [implementation status](IMPLEMENTATION_STATUS.md) for delivered code and unrun checks. Earlier prerequisite descriptions above record the preparation boundary, not missing migration 005 work.

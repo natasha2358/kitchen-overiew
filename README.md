@@ -61,7 +61,7 @@ Local email rate limits are raised to 100/hour in `supabase/config.toml` for rep
 
 Run `supabase functions serve` in another terminal when using receipt uploads. Both Edge Functions require JWT verification and perform their own user/ownership checks. The private `receipts` bucket is created by migration. No OpenAI credential is needed for upload verification or manual review.
 
-`parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Automatic extraction is intentionally not wired to a model: real supermarket fixtures and a measured parser/model choice are missing. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Receipt confirmation into stock, meal generation, shopping lists, and weekly planning remain later work.
+`parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Automatic extraction is intentionally not wired to a model: real supermarket fixtures and a measured parser/model choice are missing. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Saved manual reviews can now be confirmed into stock, with duplicate warnings and retry protection. Source PDF deletion preserves confirmation history. These flows remain unverified while tests are paused. Meal generation, shopping lists, and weekly planning remain later work.
 
 Additional prepared commands (execution currently paused at the user's request):
 

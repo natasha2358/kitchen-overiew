@@ -95,3 +95,11 @@ The checkpoint was pushed to GitHub at the user's request. The existing workflow
 - Docker reports healthy PostgreSQL, Auth, Storage, gateway, Mailpit and metadata containers; REST is running. These are service startup observations, not application or authorization tests.
 - Removed the database test command from README setup steps and explicitly marked checks as paused. No tests were run during this continuation.
 - Remaining blockers: Edge container dependency networking, unrun integration/Android checks, and real receipt fixtures/AI parsing. M5 confirmation implementation remains future work.
+
+## M5 — atomic receipt confirmation (implementation checkpoint)
+
+Implemented migration 005: authorized receipt locking, reviewed-revision checks, semantic duplicate candidates and explicit candidate acknowledgement, compatible quantity conversion, product resolution, separate line batches, immutable movements and a stored confirmation in one transaction. A receipt returns its prior confirmation even with a new operation ID; reused IDs with different payloads are rejected. Client requests survive lost responses in local secure/session storage. Confirmed reviews are immutable.
+
+Added optional merchant/number/date/total/currency review fields. The ownership-checked source deletion function uses a persisted deletion token, retains canonical hashes and movements, and permits a verified replacement source without reconfirmation. Storage calls remain outside stock transactions.
+
+Applied migration 005 locally and regenerated database types. TypeScript compilation passed. Added transaction/authorization/retry/deletion tests but did not run them; concurrency, Storage integration and Android acceptance remain unverified. Edge runtime networking remains blocked in this cloud. No production deployment.

@@ -390,3 +390,7 @@ import_map = "./functions/deno.json"
 [functions.parse-receipt]
 verify_jwt = true
 import_map = "./functions/deno.json"
+
+[functions.delete-receipt-source]
+verify_jwt = true
+import_map = "./functions/deno.json"

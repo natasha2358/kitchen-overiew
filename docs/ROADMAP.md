@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: implementation of the user-authorized four-milestone assignment is underway. See [Implementation status](IMPLEMENTATION_STATUS.md) for mapping to this roadmap and measured exit gates.
+Status: M5–M7 implementation is authorized; tests remain paused. See [Implementation status](IMPLEMENTATION_STATUS.md) for mapping to this roadmap and measured exit gates.
 Related: [PRD](PRD.md), [Architecture](ARCHITECTURE.md), [Contributor instructions](../AGENTS.md).
 
 Work in the order below. Split each milestone into reviewable changes that can be verified independently. Do not advance past an exit gate with unresolved data integrity or authorization failures.
@@ -60,6 +60,8 @@ Verify: Android document picker/cancel; usable-text fixtures taking the text rou
 Exit: supported fixtures become reviewable drafts with correct or flagged grocery lines; inventory is unchanged by every upload/extraction/review path. Each fixture has a recorded route and fallback reason if applicable. Actual line/field quality, latency, and cost measurements support the stated format coverage and chosen routing rules; do not lock the approach before this evidence exists.
 
 ## M5: Atomic receipt confirmation and duplicate protection
+
+Implementation checkpoint: migration 005 and client/server flows are present. Exit verification is pending; see Implementation status.
 
 Dependencies: M4. Requirements: confirmation portion of PRD-05, PRD-06.
 
