@@ -72,10 +72,16 @@ npm run test:edge       # synthetic PDF and proposal contracts
 npm run test:services   # Auth, private Storage and Edge integration
 ```
 
-The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with all four migrations applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full backend integration remains unverified and tests remain paused. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
+The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–008 applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full backend integration remains unverified and tests remain paused. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
 
 ## Meal suggestions
 
-Apply migrations through 006 and serve Edge Functions. Configure `OPENAI_API_KEY` and `OPENAI_MEAL_MODEL` only in an ignored server environment file passed to `supabase functions serve --env-file /path/to/server.env`. Select/evaluate a model that supports Responses structured outputs before claiming recipe quality. No default model or credentials are supplied. Without both values, generation returns `MEALS_NOT_CONFIGURED`. `store:false` is set on requests; this is not a promise of zero provider retention.
+Apply all migrations through 008 and serve Edge Functions. Configure `OPENAI_API_KEY` and `OPENAI_MEAL_MODEL` only in an ignored server environment file passed to `supabase functions serve --env-file /path/to/server.env`. Select/evaluate a model that supports Responses structured outputs before claiming recipe quality. No default model or credentials are supplied. Without both values, generation returns `MEALS_NOT_CONFIGURED`. `store:false` is set on requests; this is not a promise of zero provider retention.
 
 Save dietary choices, exclusions and servings in Recipes. Optional staple assumptions are edited in Kitchen's product catalogue, including products with no batch. Suggestions display measured stock separately from shortages and assumptions. Refresh before relying on a saved suggestion. No suggestion creates or consumes stock. Tests, live generation and device validation remain pending.
+
+## Record cooking
+
+In Recipes, open **Review actual cooking usage** on a saved recipe, or **Record a meal manually / recover cooking**. Review actual quantities and batch allocations; the proposal uses usable batches with earliest known expiry first. Enter any amount used outside tracked inventory and explicitly confirm it. Tracked plus untracked must equal actual usage. Press **Cooked — confirm actual usage** once ready.
+
+A lost response is reconciled using **Retry pending cooking confirmation**, including after restarting the app. **Record another meal** starts a distinct cooking event. History retains untracked usage without stock movements. No OpenAI key is needed for manual inventory, manual receipt confirmation, or manual cooking. These flows have implementation and static-check evidence only; integration/device tests are paused.

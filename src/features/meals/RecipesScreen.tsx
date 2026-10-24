@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
@@ -104,6 +105,7 @@ function Preferences({ context }: { context: MealContext }) {
   );
 }
 function Recipes() {
+  const router = useRouter();
   const context = useMealContext();
   const suggestions = useSuggestions();
   const h = useHousehold();
@@ -136,6 +138,10 @@ function Recipes() {
   if (context.isError) return <Problem message={messageOf(context.error)} />;
   return (
     <>
+      <Button
+        title="Record a meal manually / recover cooking"
+        onPress={() => router.push("/cooking")}
+      />
       <Preferences
         key={context.data.preferences.revision}
         context={context.data}
@@ -249,10 +255,16 @@ function Recipes() {
                     {i + 1}. {step}
                   </Body>
                 ))}
-                <Body>
-                  Cooking confirmation arrives in M7. Viewing this recipe
-                  changes no stock.
-                </Body>
+                <Button
+                  title="Review actual cooking usage"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/cooking",
+                      params: { suggestion: s.id, index: String(index) },
+                    })
+                  }
+                  disabled={!online}
+                />
               </Card>
             );
           })}

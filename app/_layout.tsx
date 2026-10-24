@@ -37,6 +37,10 @@ export default function RootLayout() {
             options={{ title: "Review receipt" }}
           />
           <Stack.Screen
+            name="cooking/index"
+            options={{ title: "Review cooking" }}
+          />
+          <Stack.Screen
             name="auth/callback"
             options={{ title: "Verify account" }}
           />

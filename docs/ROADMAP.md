@@ -91,6 +91,8 @@ Exit: every suggested ingredient has a measured availability result, a labeled d
 
 ## M7: Atomic cooking confirmation
 
+Implementation checkpoint: migrations 007–008, cooking review and history are present. Tests are paused; atomicity/concurrency and Android exit verification remain pending.
+
 Dependencies: M6. Requirements: PRD-08.
 
 Deliver in small increments:

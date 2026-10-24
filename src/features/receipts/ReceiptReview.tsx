@@ -36,7 +36,7 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
     total: receipt.total ?? "",
     currency: receipt.currency ?? "",
   });
-  const [acknowledged, setAcknowledged] = useState(false);
+  const [acknowledged, setAcknowledged] = useState<string[]>([]);
   const [deleteRequested, setDeleteRequested] = useState(false);
   const [source, setSource] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -101,7 +101,7 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
         total: latest.total ?? "",
         currency: latest.currency ?? "",
       });
-      setAcknowledged(false);
+      setAcknowledged([]);
       setDirty(false);
       setNotice("Latest saved review loaded.");
       client.setQueryData(["receipt", h.data?.id, receipt.id], latest);
@@ -121,7 +121,7 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
       const request = pending?.request ?? {
         receipt_id: receipt.id,
         revision,
-        acknowledged: acknowledged ? receipt.duplicates.map((d) => d.id) : [],
+        acknowledged,
       };
       await runOperation(
         key,
@@ -309,7 +309,7 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
                 onChangeText={(value) => {
                   setMetadata((old) => ({ ...old, [key]: value }));
                   setDirty(true);
-                  setAcknowledged(false);
+                  setAcknowledged([]);
                 }}
               />
             ))}
@@ -428,11 +428,17 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
             {receipt.duplicates.length > 0 && (
               <Button
                 title={
-                  acknowledged
+                  receipt.duplicates.every((d) => acknowledged.includes(d.id))
                     ? "✓ These are separate purchases"
                     : "Acknowledge these are separate purchases"
                 }
-                onPress={() => setAcknowledged((v) => !v)}
+                onPress={() =>
+                  setAcknowledged((old) =>
+                    receipt.duplicates.every((d) => old.includes(d.id))
+                      ? []
+                      : receipt.duplicates.map((d) => d.id),
+                  )
+                }
                 disabled={busy || dirty}
               />
             )}

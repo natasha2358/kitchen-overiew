@@ -2,7 +2,7 @@
 
 Branch: `feat/smart-kitchen-foundation`, pushed to GitHub at the user’s request. No merge, app publication, production deployment, paid infrastructure, or external account modification was performed.
 
-**Testing is paused at the user's request.** The code for the four assigned milestones is present. Runtime verification of authentication, inventory, and receipt flows remains incomplete; do not treat implementation as a verified release.
+**Testing is paused at the user's request.** The original four milestones and M5–M7 implementation are present. Runtime verification of authentication, inventory, and receipt flows remains incomplete; do not treat implementation as a verified release.
 
 ## Scope and milestone mapping
 
@@ -36,13 +36,13 @@ Database tests are written for authorization, forged references, retries, stale 
 
 Implemented PDF selection/cancel handling, private upload preparation, server PDF structure/size/page validation, SHA-256 over stored bytes, household-scoped canonical identity, and manual receipt review. Review supports source labels, reviewed names, product matching, quantities/units, locations, optional expiry, exclusion, and adding missing lines. Saves are revision-protected; source labels are preserved. Upload and review SQL never write inventory.
 
-Migration `202610240003` creates receipt/import entities and protected RPCs. Migration `202610240004` creates the private bucket and Storage policies. All four migrations are now applied in this cloud instance. Starting Storage initialized its schema and unblocked the private bucket/policies migration. Receipt uploads still require the Edge runtime, which is blocked by container DNS in this environment.
+Migration `202610240003` creates receipt/import entities and protected RPCs. Migration `202610240004` creates the private bucket and Storage policies. These four foundation migrations are applied in this cloud instance; migrations 005–008 are also now applied. Starting Storage initialized its schema and unblocked the private bucket/policies migration. Receipt uploads still require the Edge runtime, which is blocked by container DNS in this environment.
 
 `verify-receipt` validates an authenticated user's ownership before downloading the private object or calling the service-role hash-registration RPC. `parse-receipt` authenticates and checks ownership, then explicitly returns `501 PARSING_NOT_CONFIGURED`. No fake extraction is returned. No OpenAI binding or real supermarket fixtures were supplied; simply adding a key does not enable parsing.
 
 Synthetic text and image-only PDFs plus a hand-authored proposal fixture are included. They test structural/contract boundaries only. A genuine encrypted PDF fixture and real supermarket digital/scanned fixtures are still needed. Parser/model choice, line-coverage evaluation, extraction leases, bounded two-call orchestration, timeouts, and late-result protection belong to the future parsing implementation.
 
-Confirmation of receipt lines into inventory is roadmap M5 and is not implemented. Duplicate attempt objects remain private; redundant-object cleanup and source deletion are deferred. Native picker behavior and full Storage/Edge integration are unverified.
+M5 now implements confirmation and source deletion (see checkpoint below). Duplicate attempt objects remain private; automatic redundant-object cleanup remains deferred. Native picker behavior and full Storage/Edge integration are unverified.
 
 ## Commands and evidence
 
@@ -74,7 +74,7 @@ The cloud instance now runs PostgreSQL, metadata, Auth, Storage, REST, gateway a
 ## Next steps
 
 1. Review the implementation; keep the current working branch separate from main.
-2. On a development computer, start the full Supabase stack, apply all four migrations, and serve the Edge Functions. See README for exact commands and Android instructions.
+2. On a development computer, start the full Supabase stack, apply all migrations through 008, and serve the Edge Functions. See README for exact commands and Android instructions.
 3. Set only the public Supabase URL/anon or publishable key in `.env.local`; configure exact email redirect URLs for the chosen Expo client.
 4. When testing is authorized again, run the prepared lint/type/unit, database, Auth/email, Edge, and Storage integration commands. Fix any discovered failures before claiming readiness.
 5. Run Android startup/navigation, email callbacks, inventory, picker/cancel, upload recovery, and review on a real device/emulator. Native/API integration remains the main verification gap.
@@ -84,7 +84,7 @@ The cloud instance now runs PostgreSQL, metadata, Auth, Storage, REST, gateway a
 
 The user reaffirmed the testing pause. No tests were run during this preparation. Receipt review now retains unsaved edits across background refreshes, uses the revision on which edits were based, and offers explicit reload/discard handling. Review feedback now flags invalid values and product/unit dimension mismatches. TypeScript compilation passed during this work; additional tests were written but not executed.
 
-The image-flattening helper now supports the pinned Storage and Edge runtime images as well as PostgreSQL. All three images were prepared. Auth and Storage startup completed, and migration 004 is applied. Edge startup remains blocked by container DNS. See [M5 readiness](M5_READINESS.md) for the remaining gates; M5 itself has not started.
+The image-flattening helper now supports the pinned Storage and Edge runtime images as well as PostgreSQL. All three images were prepared. Auth and Storage startup completed, and migration 004 is applied. Edge startup remains blocked by container DNS. See [M5 readiness](M5_READINESS.md) for the remaining gates; M5 was not started at that preparation checkpoint; implementation is recorded below.
 
 The checkpoint was pushed to GitHub at the user's request. The existing workflow had push/PR triggers, so that first push may have queued remote checks; Actions API access is blocked here and the remote outcome is unknown. Automatic workflow triggers have now been replaced with manual `workflow_dispatch` during the user's testing pause. No local test command was run. Restore automatic CI triggers when testing resumes.
 
@@ -94,7 +94,7 @@ The checkpoint was pushed to GitHub at the user's request. The existing workflow
 - Ran `supabase migration up --local`: database up to date. Read migration history: versions 202610240001 through 202610240004 are present. One attempt before database startup completed failed with connection refused; retry after startup succeeded.
 - Docker reports healthy PostgreSQL, Auth, Storage, gateway, Mailpit and metadata containers; REST is running. These are service startup observations, not application or authorization tests.
 - Removed the database test command from README setup steps and explicitly marked checks as paused. No tests were run during this continuation.
-- Remaining blockers: Edge container dependency networking, unrun integration/Android checks, and real receipt fixtures/AI parsing. M5 confirmation implementation remains future work.
+- Remaining blockers: Edge container dependency networking, unrun integration/Android checks, and real receipt fixtures/AI parsing. At that checkpoint M5 was future work; it is now implemented as recorded below.
 
 ## M5 — atomic receipt confirmation (implementation checkpoint)
 
@@ -113,3 +113,25 @@ Implemented migration 006: revision-protected dietary preferences/exclusions/ser
 Recipes shows saved suggestions and recalculates decimal availability, shortages and optional staple assumptions from refreshed data, indicating changed context. Unknown mappings stay unresolved. Preference changes invalidate late generation saves. No AI result writes stock. The UI discloses relevant data sent to OpenAI and supports retrying persisted generation IDs.
 
 Migration 006 applied locally; database types regenerated. Client TypeScript, lint and both new Edge entrypoint compilation passed. Added domain and database isolation/lease tests, not executed. No live model calls, fixture quality evaluation, Android interaction or Edge integration was run. Official OpenAI guide URLs returned HTTP 403 in this cloud; the current Responses request/structured-output types were read from OpenAI's official `openai-node` repository instead: https://github.com/openai/openai-node/blob/master/src/resources/responses/responses.ts . Model selection remains an explicit quality/configuration gate.
+
+## M7 — atomic cooking confirmation (implementation checkpoint)
+
+Implemented migrations 007–008: RLS-protected cooking history, stock movement provenance, and an authenticated confirmation RPC. It serializes operation retries, locks selected batches in deterministic ID order, rechecks household/product/unit/revision/expiry/available quantity, validates current preferences, and writes balances, movements, operation result and cooking snapshot in one transaction. Any invalid ingredient rolls back the entire event.
+
+Actual quantities use canonical g/ml/whole-item units. Tracked allocations plus finite explicitly acknowledged untracked usage must equal actual usage. Staple flags have no role in deduction authorization. Untracked-only ingredients create no movement. Reusing one operation ID replays its result; another intentional cooking event uses a new ID. Cooking requests carry an explicit action to prevent confusion with other stock operation kinds.
+
+The cooking screen proposes earliest-known-expiry batches, then unknown expiry, acquisition time and batch ID; it permits quantity/allocation/product edits and manual meals without a generated recipe. Unresolved ingredients can only be recorded as explicitly untracked. Pending requests survive lost responses and can be reconciled from Recipes; successful confirmations refresh inventory and history. The form keeps one operation ID per review to protect rapid repeated submissions.
+
+Final review also tied receipt duplicate acknowledgement to candidate IDs rather than a general checkbox, so a newly discovered candidate is never implicitly acknowledged. Prepared receipt database tests now encode JSON arrays correctly.
+
+### Evidence and limits
+
+- Local migrations 005, 006, 007 and 008 applied successfully; migration application is not transaction/authorization verification. Database types regenerated from the migrated schema.
+- Client TypeScript compilation and ESLint passed at implementation checkpoints. New deletion/suggestion Edge entrypoints compiled with Deno. No tests, live model calls, app export, APK build or device interaction were run during M5–M7.
+- Added unrun tests for receipt rollback/idempotency/duplicates/source replacement, meal preferences/isolation/late completion and decimal availability, cooking allocation/split validation/rollback/isolation, and real concurrent confirmation/cooking requests. Existing and new suites must be run before making integrity or readiness claims; their presence does not establish correctness.
+- Edge dependency networking, Android validation, realistic receipt fixtures, automatic receipt parsing and model-quality evaluation remain outstanding. Meals require server-only key/model configuration. Shopping/Planner remain future work.
+- Milestone commits: M5 `8154040`; M6 `1cc4107`; M7 is the commit containing this checkpoint. No merge, production deployment or publication.
+
+### Next authorized work when testing resumes
+
+Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run check:edge`, `npm run test:edge`, `npm run test:db`, `npm run test:auth`, and `npm run test:services` against an isolated local backend, fixing failures before claiming milestone exit gates. Extend Edge integration to generation/refusal/lease and deletion/replacement cases, then exercise the full Android journey. Restore automatic CI only when the testing pause is lifted. Paid model quality evaluation and production publication remain separate authorization decisions.

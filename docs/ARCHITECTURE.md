@@ -209,3 +209,9 @@ Official references verified during planning:
 Receipt metadata and line edits share one reviewed revision. Confirmation serializes household receipt confirmations while evaluating possible duplicates, then commits line batches and movements together. Source deletion uses a persisted token around the external Storage removal; verified replacement bytes can restore a deleted source without clearing confirmation.
 
 Meal generation uses one household-scoped persisted request with an attempt token and 90-second lease. Each of at most two explicit attempts has a 40-second network deadline and two-call budget; five new requests per ten minutes limits upstream use. Preferences use optimistic revisions. Only the server can complete suggestions, and late results after a preference revision change are rejected. Deterministic availability is recomputed from finite batch quantities, separately from staple assumptions. Prompt `kitchen-meals-v1` and the configured model are retained with each snapshot; real model evaluation is still pending.
+
+### Implemented M7 decisions
+
+Cooking reviews carry an explicit `cook` action, current preference revision, optional suggestion/recipe reference, and up to 30 actual ingredients with canonical units. Each ingredient has finite batch allocations (up to 100) and a separately acknowledged untracked amount. All quantities remain decimal strings at the API boundary.
+
+The cooking RPC shares the household operation ledger, locks batches in UUID order, checks current expiry in the household timezone, and preserves the actual-use snapshot. Preference saves share an advisory lock with confirmation, preventing acceptance against a concurrently replaced preference set. Batch allocations are never silently reassigned on conflict. Native/browser intent storage retains the original operation ID/request until a definitive response; successful submission locks that review until the user explicitly starts another meal.

@@ -1,33 +1,134 @@
-import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
-export async function testReceipts(db,ctx){
-  const {a,b,h,asUser,denied}=ctx;await asUser(a);
-  const op=randomUUID();const prepared=(await db.query('select public.prepare_receipt($1,$2,$3) as data',[h,op,'synthetic.pdf'])).rows[0].data;
-  assert.deepEqual((await db.query('select public.prepare_receipt($1,$2,$3) as data',[h,op,'synthetic.pdf'])).rows[0].data,prepared);
-  await denied('select public.finalize_receipt_upload($1,$2,$3)',[prepared.id,a,'a'.repeat(64)]);
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+export async function testReceipts(db, ctx) {
+  const { a, b, h, asUser, denied } = ctx;
+  await asUser(a);
+  const op = randomUUID();
+  const prepared = (
+    await db.query("select public.prepare_receipt($1,$2,$3) as data", [
+      h,
+      op,
+      "synthetic.pdf",
+    ])
+  ).rows[0].data;
+  assert.deepEqual(
+    (
+      await db.query("select public.prepare_receipt($1,$2,$3) as data", [
+        h,
+        op,
+        "synthetic.pdf",
+      ])
+    ).rows[0].data,
+    prepared,
+  );
+  await denied("select public.finalize_receipt_upload($1,$2,$3)", [
+    prepared.id,
+    a,
+    "a".repeat(64),
+  ]);
   await denied("update public.receipt_imports set status='review_ready'");
-  await denied('select public.save_receipt_review($1,1,$2)',[prepared.id,[]]);
-  await db.query('reset role');await db.query('set local role service_role');
-  await db.query('select public.finalize_receipt_upload($1,$2,$3)',[prepared.id,a,'a'.repeat(64)]);
+  await denied("select public.save_receipt_review($1,1,$2)", [
+    prepared.id,
+    JSON.stringify([]),
+  ]);
+  await db.query("reset role");
+  await db.query("set local role service_role");
+  await db.query("select public.finalize_receipt_upload($1,$2,$3)", [
+    prepared.id,
+    a,
+    "a".repeat(64),
+  ]);
   await asUser(a);
-  const line={id:randomUUID(),source_label:'Original rice label',reviewed_name:'Rice',quantity:'500',unit:'g',location_id:null,product_id:null,expiry:null,included:true};
-  assert.equal((await db.query('select public.save_receipt_review($1,1,$2) as revision',[prepared.id,[line]])).rows[0].revision,2);
-  await denied('select public.save_receipt_review($1,1,$2)',[prepared.id,[{...line,quantity:'999'}]]);
-  await db.query('select public.save_receipt_review($1,2,$2)',[prepared.id,[{...line,source_label:'malicious overwrite',quantity:'250'}]]);
-  let review=(await db.query('select public.get_receipt_review($1) as data',[prepared.id])).rows[0].data;
-  assert.equal(review.lines[0].source_label,'Original rice label');assert.equal(review.lines[0].quantity,'250.000000');
-  const other=(await db.query('select public.prepare_receipt($1,$2,$3) as data',[h,randomUUID(),'duplicate.pdf'])).rows[0].data;
-  await db.query('reset role');await db.query('set local role service_role');
-  const duplicate=(await db.query('select public.finalize_receipt_upload($1,$2,$3) as data',[other.id,a,'a'.repeat(64)])).rows[0].data;
-  assert.equal(duplicate.id,prepared.id);assert.equal(duplicate.duplicate,true);
+  const line = {
+    id: randomUUID(),
+    source_label: "Original rice label",
+    reviewed_name: "Rice",
+    quantity: "500",
+    unit: "g",
+    location_id: null,
+    product_id: null,
+    expiry: null,
+    included: true,
+  };
+  assert.equal(
+    (
+      await db.query("select public.save_receipt_review($1,1,$2) as revision", [
+        prepared.id,
+        JSON.stringify([line]),
+      ])
+    ).rows[0].revision,
+    2,
+  );
+  await denied("select public.save_receipt_review($1,1,$2)", [
+    prepared.id,
+    JSON.stringify([{ ...line, quantity: "999" }]),
+  ]);
+  await db.query("select public.save_receipt_review($1,2,$2)", [
+    prepared.id,
+    JSON.stringify([
+      { ...line, source_label: "malicious overwrite", quantity: "250" },
+    ]),
+  ]);
+  let review = (
+    await db.query("select public.get_receipt_review($1) as data", [
+      prepared.id,
+    ])
+  ).rows[0].data;
+  assert.equal(review.lines[0].source_label, "Original rice label");
+  assert.equal(review.lines[0].quantity, "250.000000");
+  const other = (
+    await db.query("select public.prepare_receipt($1,$2,$3) as data", [
+      h,
+      randomUUID(),
+      "duplicate.pdf",
+    ])
+  ).rows[0].data;
+  await db.query("reset role");
+  await db.query("set local role service_role");
+  const duplicate = (
+    await db.query("select public.finalize_receipt_upload($1,$2,$3) as data", [
+      other.id,
+      a,
+      "a".repeat(64),
+    ])
+  ).rows[0].data;
+  assert.equal(duplicate.id, prepared.id);
+  assert.equal(duplicate.duplicate, true);
   await asUser(b);
-  assert.equal((await db.query('select * from public.receipt_imports where id=$1',[prepared.id])).rowCount,0);
-  assert.equal((await db.query('select * from public.receipt_lines where receipt_id=$1',[prepared.id])).rowCount,0);
-  await denied('select public.save_receipt_review($1,3,$2)',[prepared.id,[]]);
-  const foreignLocation=(await db.query('select id from public.storage_locations limit 1')).rows[0].id;
+  assert.equal(
+    (
+      await db.query("select * from public.receipt_imports where id=$1", [
+        prepared.id,
+      ])
+    ).rowCount,
+    0,
+  );
+  assert.equal(
+    (
+      await db.query("select * from public.receipt_lines where receipt_id=$1", [
+        prepared.id,
+      ])
+    ).rowCount,
+    0,
+  );
+  await denied("select public.save_receipt_review($1,3,$2)", [
+    prepared.id,
+    JSON.stringify([]),
+  ]);
+  const foreignLocation = (
+    await db.query("select id from public.storage_locations limit 1")
+  ).rows[0].id;
   await asUser(a);
-  await denied('select public.save_receipt_review($1,3,$2)',[prepared.id,[{...line,location_id:foreignLocation}]]);
-  review=(await db.query('select public.get_receipt_review($1) as data',[prepared.id])).rows[0].data;
-  assert.equal(review.revision,3);assert.equal(review.lines[0].quantity,'250.000000');
-  await db.query('reset role');
+  await denied("select public.save_receipt_review($1,3,$2)", [
+    prepared.id,
+    JSON.stringify([{ ...line, location_id: foreignLocation }]),
+  ]);
+  review = (
+    await db.query("select public.get_receipt_review($1) as data", [
+      prepared.id,
+    ])
+  ).rows[0].data;
+  assert.equal(review.revision, 3);
+  assert.equal(review.lines[0].quantity, "250.000000");
+  await db.query("reset role");
 }

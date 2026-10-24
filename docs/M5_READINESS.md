@@ -1,37 +1,20 @@
-# Readiness for M5: receipt confirmation
+# M5 implementation and remaining verification
 
-M5 implementation is now present; its exit gate remains unverified. Preparation targets confirmation of **manually reviewed** receipts; it does not claim automatic extraction or supermarket-format coverage. Testing remains paused by explicit user instruction.
+M5 is implemented in migration 005, the receipt review UI, and the source-deletion Edge Function. Tests remain paused at the user's request; implementation is not a passed exit gate.
 
-## Implemented prerequisites
+## Delivered
 
-- Authenticated household ownership, same-household foreign keys and protected stock writes.
-- Decimal-string quantity contracts, deterministic conversions and atomic inventory RPCs.
-- Verified PDF identity, canonical duplicate imports and revision-protected receipt review.
-- Client review edits remain intact when query data refreshes. Explicit reload replaces local edits; saves use the revision on which those edits were based.
-- Review feedback identifies malformed values and incompatible product units. This feedback is not a substitute for validation in the future confirmation RPC.
+- Optional merchant, receipt number, purchase date, total and currency are saved atomically with reviewed lines and a revision check.
+- Possible duplicate receipts use normalized merchant plus receipt number, or merchant/date/total/currency. Users acknowledge the specific displayed candidate IDs; new candidates require fresh acknowledgement. Exact-byte canonical identity remains separate.
+- One authorized PostgreSQL transaction locks the receipt, validates included lines and household references, resolves products, converts compatible units, creates separate batches and movements, and persists confirmation.
+- Same-operation retries return the saved result. A different operation ID for an already confirmed receipt also returns that receipt's original confirmation. A changed payload cannot reuse a committed operation ID.
+- Pending client confirmation requests retain their original ID and contents across interrupted responses. Confirmed reviews cannot be edited.
+- Source deletion uses an ownership-checked server workflow and persistent deletion token. It retains canonical hash, line/batch provenance and ledger history. Verified replacement bytes can restore a deleted source without reopening confirmation.
 
-## Required verification before an M5 readiness claim
+## Still required
 
-- Auth, Storage and API services have started, and migration 004 is applied. Edge runtime still needs working container DNS for its bootstrap dependencies; it is currently excluded. Full service integration remains unverified.
-- `npm run test:db`: household isolation, transactional stock changes, concurrency, receipt ownership and source preservation.
-- `npm run test:auth`: signup, email verification, login, recovery and logout.
-- `npm run test:services`: private PDF access, immutable uploads, server verification, concurrent hash deduplication and unchanged stock.
-- Client/Edge checks and Android manual review journey, including interrupted uploads and stale reviews.
+- Resolve the cloud Edge container's DNS failure or use a local Docker environment with working dependency networking. Auth, Storage, REST and PostgreSQL are running here; migration 005 is applied.
+- When testing resumes, run the prepared database, Auth, Edge and Storage checks, including rollback, same-receipt concurrent confirmation, lost-response recovery, candidate acknowledgement, source replacement and cross-household denial.
+- Validate the complete review/confirmation/deletion journey on Android.
 
-These checks remain unrun while testing is paused. An applied migration or successful compilation alone does not satisfy them.
-
-## M5 implementation boundary
-
-Implement confirmation as one authorized PostgreSQL transaction, not a loop of client-side inventory calls. The future request carries receipt ID, reviewed revision, operation ID and acknowledgement of any possible-duplicate warning.
-
-The transaction must lock the canonical receipt, return an existing confirmation before rejecting a retry for an old revision, validate every included line and its household references, convert only compatible units, create distinct batches and movements, and persist the result atomically. Reject empty selections, unresolved products/locations/quantities, incompatible units and stale edits without partial writes. The same receipt cannot be confirmed again even with a different operation ID.
-
-M5 still needs versioned schema changes for confirmation state/result, receipt-line batch provenance, and merchant/receipt/date/total/currency metadata used for possible-duplicate warnings. The current hash detects identical bytes only; filename equality is not a semantic duplicate test.
-
-Source deletion must run through an ownership-checked server workflow and retain hash, confirmation identity and ledger history. Migration 005 and the review UI implement confirmation and source deletion; behavioral verification is pending.
-
-## Separate unfinished M4 work
-
-Real supermarket fixtures, embedded-text extraction/model selection, bounded AI calls, leases, late-result rejection and measured extraction quality remain outstanding. `parse-receipt` must continue returning its explicit configuration boundary until those prerequisites are met. No client-side model key is needed for manual review or confirmation.
-
-See the M5 checkpoint in [implementation status](IMPLEMENTATION_STATUS.md) for delivered code and unrun checks. Earlier prerequisite descriptions above record the preparation boundary, not missing migration 005 work.
+Real supermarket fixtures and automatic receipt extraction remain separate unfinished M4 work. The parser still returns `PARSING_NOT_CONFIGURED`; M5 currently accepts verified PDFs reviewed manually. See [implementation status](IMPLEMENTATION_STATUS.md) for M6/M7 and measured evidence.

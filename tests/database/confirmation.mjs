@@ -130,5 +130,41 @@ export async function testConfirmation(db, { a, b, h, asUser, denied }) {
     ).rows[0].source_deleted_at,
     null,
   );
+
+  const possibleA = await draft("d");
+  const possibleB = await draft("e");
+  const metadata = {
+    merchant: "Fixture store",
+    purchased_on: "2026-10-24",
+    total: "12.50",
+    currency: "EUR",
+  };
+  for (const receipt of [possibleA, possibleB])
+    await db.query("select public.save_receipt_review($1,1,$2,$3)", [
+      receipt,
+      JSON.stringify([{ ...line, id: randomUUID() }]),
+      metadata,
+    ]);
+  const candidates = (
+    await db.query("select public.receipt_duplicate_candidates($1) as r", [
+      possibleA,
+    ])
+  ).rows[0].r;
+  assert.deepEqual(
+    candidates.map((c) => c.id),
+    [possibleB],
+  );
+  await denied("select public.confirm_receipt($1,2,$2)", [
+    possibleA,
+    randomUUID(),
+  ]);
+  const acknowledged = (
+    await db.query("select public.confirm_receipt($1,2,$2,$3) as r", [
+      possibleA,
+      randomUUID(),
+      [possibleB],
+    ])
+  ).rows[0].r;
+  assert.equal(acknowledged.batches.length, 1);
   await db.query("reset role");
 }

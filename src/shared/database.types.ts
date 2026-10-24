@@ -34,6 +34,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      cooking_confirmations: {
+        Row: {
+          actor_id: string
+          created_at: string
+          household_id: string
+          id: string
+          recipe_index: number | null
+          result: Json
+          snapshot: Json
+          suggestion_id: string | null
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          household_id: string
+          id: string
+          recipe_index?: number | null
+          result: Json
+          snapshot: Json
+          suggestion_id?: string | null
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          household_id?: string
+          id?: string
+          recipe_index?: number | null
+          result?: Json
+          snapshot?: Json
+          suggestion_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cooking_confirmations_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cooking_confirmations_household_id_id_fkey"
+            columns: ["household_id", "id"]
+            isOneToOne: false
+            referencedRelation: "inventory_operations"
+            referencedColumns: ["household_id", "id"]
+          },
+          {
+            foreignKeyName: "cooking_confirmations_household_id_suggestion_id_fkey"
+            columns: ["household_id", "suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "meal_suggestions"
+            referencedColumns: ["household_id", "id"]
+          },
+        ]
+      }
       food_preferences: {
         Row: {
           dietary: string[]
@@ -466,6 +521,7 @@ export type Database = {
           actor_id: string
           balance: number
           batch_id: string
+          cooking_id: string | null
           created_at: string
           delta: number
           household_id: string
@@ -477,6 +533,7 @@ export type Database = {
           actor_id: string
           balance: number
           batch_id: string
+          cooking_id?: string | null
           created_at?: string
           delta: number
           household_id: string
@@ -488,6 +545,7 @@ export type Database = {
           actor_id?: string
           balance?: number
           batch_id?: string
+          cooking_id?: string | null
           created_at?: string
           delta?: number
           household_id?: string
@@ -501,6 +559,13 @@ export type Database = {
             columns: ["household_id", "batch_id"]
             isOneToOne: false
             referencedRelation: "inventory_batches"
+            referencedColumns: ["household_id", "id"]
+          },
+          {
+            foreignKeyName: "stock_movements_household_id_cooking_id_fkey"
+            columns: ["household_id", "cooking_id"]
+            isOneToOne: false
+            referencedRelation: "cooking_confirmations"
             referencedColumns: ["household_id", "id"]
           },
           {
@@ -554,6 +619,10 @@ export type Database = {
       }
       begin_receipt_deletion: { Args: { p_receipt: string }; Returns: Json }
       bootstrap_household: { Args: { p_timezone?: string }; Returns: string }
+      confirm_cooking: {
+        Args: { p_household: string; p_operation: string; p_request: Json }
+        Returns: Json
+      }
       confirm_receipt: {
         Args: {
           p_acknowledged?: string[]
