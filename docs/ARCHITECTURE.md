@@ -203,3 +203,9 @@ Official references verified during planning:
 - [Supabase row-level security](https://supabase.com/docs/guides/database/postgres/row-level-security).
 - [Supabase database functions](https://supabase.com/docs/guides/database/functions).
 - [Supabase Storage access control](https://supabase.com/docs/guides/storage/security/access-control).
+
+### Implemented M5/M6 decisions
+
+Receipt metadata and line edits share one reviewed revision. Confirmation serializes household receipt confirmations while evaluating possible duplicates, then commits line batches and movements together. Source deletion uses a persisted token around the external Storage removal; verified replacement bytes can restore a deleted source without clearing confirmation.
+
+Meal generation uses one household-scoped persisted request with an attempt token and 90-second lease. Each of at most two explicit attempts has a 40-second network deadline and two-call budget; five new requests per ten minutes limits upstream use. Preferences use optimistic revisions. Only the server can complete suggestions, and late results after a preference revision change are rejected. Deterministic availability is recomputed from finite batch quantities, separately from staple assumptions. Prompt `kitchen-meals-v1` and the configured model are retained with each snapshot; real model evaluation is still pending.

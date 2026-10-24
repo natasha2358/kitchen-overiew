@@ -19,6 +19,7 @@ function Catalog() {
   const [name, setName] = useState("");
   const [aliases, setAliases] = useState("");
   const [unit, setUnit] = useState<"g" | "ml" | "item">("g");
+  const [staple, setStaple] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   async function save(remove = false) {
@@ -40,6 +41,7 @@ function Catalog() {
         const values = {
           name: z.string().trim().min(1).max(120).parse(name),
           base_unit: unit,
+          always_available: staple,
           aliases: z
             .array(z.string().trim().min(1).max(120))
             .max(50)
@@ -74,13 +76,20 @@ function Catalog() {
         if (r.error) throw r.error;
       }
       await Promise.all(
-        ["products", "locations", "inventory"].map((key) =>
+        [
+          "products",
+          "locations",
+          "inventory",
+          "meal-context",
+          "suggestions",
+        ].map((key) =>
           client.invalidateQueries({ queryKey: [key, h.data?.id] }),
         ),
       );
       setId("");
       setName("");
       setAliases("");
+      setStaple(false);
     } catch (e) {
       setError(messageOf(e));
     } finally {
@@ -110,6 +119,7 @@ function Catalog() {
             setId("");
             setName("");
             setAliases("");
+            setStaple(false);
           }}
           disabled={busy}
         />
@@ -135,6 +145,7 @@ function Catalog() {
               setName(p.name);
               setAliases(p.aliases.join(", "));
               setUnit(p.base_unit);
+              setStaple(p.always_available);
             }}
             disabled={busy}
           />
@@ -158,6 +169,19 @@ function Catalog() {
               onChangeText={setAliases}
               editable={!busy}
             />
+            <Button
+              title={
+                staple
+                  ? "✓ Assume this staple is available for suggestions"
+                  : "Optionally assume this staple is available"
+              }
+              onPress={() => setStaple((v) => !v)}
+              disabled={busy}
+            />
+            <Body>
+              This changes meal suggestions only. It adds no stock and never
+              skips cooking deductions.
+            </Body>
             <Body>Base unit</Body>
             {(["g", "ml", "item"] as const).map((u) => (
               <Button

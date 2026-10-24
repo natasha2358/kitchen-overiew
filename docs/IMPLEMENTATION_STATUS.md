@@ -103,3 +103,13 @@ Implemented migration 005: authorized receipt locking, reviewed-revision checks,
 Added optional merchant/number/date/total/currency review fields. The ownership-checked source deletion function uses a persisted deletion token, retains canonical hashes and movements, and permits a verified replacement source without reconfirmation. Storage calls remain outside stock transactions.
 
 Applied migration 005 locally and regenerated database types. TypeScript compilation passed. Added transaction/authorization/retry/deletion tests but did not run them; concurrency, Storage integration and Android acceptance remain unverified. Edge runtime networking remains blocked in this cloud. No production deployment.
+
+## M6 — preference-aware meal suggestions (implementation checkpoint)
+
+Implemented migration 006: revision-protected dietary preferences/exclusions/servings, RLS-protected suggestion snapshots, persisted generation leases, two explicit attempts per request, and five new requests per household per ten minutes. Product staple flags are editable without creating balances or movements.
+
+`suggest-meals` fetches fresh household data, excludes expired stock, orders usable batches by expiry, and uses the OpenAI Responses API with structured output, no tools and `store:false`. It requires server-only `OPENAI_API_KEY` and `OPENAI_MEAL_MODEL`; neither is supplied or created. Each attempt permits at most two upstream calls within a 40-second deadline. Refusal, incomplete output, invalid references/units/quantities, repeated mapped ingredients and known exclusion/diet conflicts are rejected. Dietary name checks are conservative common-name checks, not a comprehensive ingredient ontology. Empty compatible results remain explicit.
+
+Recipes shows saved suggestions and recalculates decimal availability, shortages and optional staple assumptions from refreshed data, indicating changed context. Unknown mappings stay unresolved. Preference changes invalidate late generation saves. No AI result writes stock. The UI discloses relevant data sent to OpenAI and supports retrying persisted generation IDs.
+
+Migration 006 applied locally; database types regenerated. Client TypeScript, lint and both new Edge entrypoint compilation passed. Added domain and database isolation/lease tests, not executed. No live model calls, fixture quality evaluation, Android interaction or Edge integration was run. Official OpenAI guide URLs returned HTTP 403 in this cloud; the current Responses request/structured-output types were read from OpenAI's official `openai-node` repository instead: https://github.com/openai/openai-node/blob/master/src/resources/responses/responses.ts . Model selection remains an explicit quality/configuration gate.

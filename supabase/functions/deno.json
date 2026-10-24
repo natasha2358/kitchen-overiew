@@ -2,8 +2,11 @@
   "imports": {
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.118.0",
     "zod": "npm:zod@4.6.7",
-    "pdf-lib": "npm:pdf-lib@1.17.1"
+    "pdf-lib": "npm:pdf-lib@1.17.1",
+    "decimal.js": "npm:decimal.js@10.6.0"
   },
-  "compilerOptions": { "strict": true },
+  "compilerOptions": {
+    "strict": true
+  },
   "nodeModulesDir": "auto"
 }

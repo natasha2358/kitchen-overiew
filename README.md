@@ -1,6 +1,6 @@
 # Smart Kitchen
 
-Android-first Expo application for household grocery inventory and private receipt drafts. Recipes, Shopping, and Planner are visible destinations; their future features are deliberately marked as planned. See [implementation status](docs/IMPLEMENTATION_STATUS.md) for tested capabilities and limitations.
+Android-first Expo application for household grocery inventory and private receipt drafts. Recipes supports configured meal suggestions; Shopping and Planner remain marked as planned. See [implementation status](docs/IMPLEMENTATION_STATUS.md) for tested capabilities and limitations.
 
 ## Requirements
 
@@ -61,7 +61,7 @@ Local email rate limits are raised to 100/hour in `supabase/config.toml` for rep
 
 Run `supabase functions serve` in another terminal when using receipt uploads. Both Edge Functions require JWT verification and perform their own user/ownership checks. The private `receipts` bucket is created by migration. No OpenAI credential is needed for upload verification or manual review.
 
-`parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Automatic extraction is intentionally not wired to a model: real supermarket fixtures and a measured parser/model choice are missing. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Saved manual reviews can now be confirmed into stock, with duplicate warnings and retry protection. Source PDF deletion preserves confirmation history. These flows remain unverified while tests are paused. Meal generation, shopping lists, and weekly planning remain later work.
+`parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Automatic extraction is intentionally not wired to a model: real supermarket fixtures and a measured parser/model choice are missing. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Saved manual reviews can now be confirmed into stock, with duplicate warnings and retry protection. Source PDF deletion preserves confirmation history. These flows remain unverified while tests are paused. Meal generation is available behind the configuration below. Shopping lists and weekly planning remain later work.
 
 Additional prepared commands (execution currently paused at the user's request):
 
@@ -73,3 +73,9 @@ npm run test:services   # Auth, private Storage and Edge integration
 ```
 
 The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with all four migrations applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full backend integration remains unverified and tests remain paused. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
+
+## Meal suggestions
+
+Apply migrations through 006 and serve Edge Functions. Configure `OPENAI_API_KEY` and `OPENAI_MEAL_MODEL` only in an ignored server environment file passed to `supabase functions serve --env-file /path/to/server.env`. Select/evaluate a model that supports Responses structured outputs before claiming recipe quality. No default model or credentials are supplied. Without both values, generation returns `MEALS_NOT_CONFIGURED`. `store:false` is set on requests; this is not a promise of zero provider retention.
+
+Save dietary choices, exclusions and servings in Recipes. Optional staple assumptions are edited in Kitchen's product catalogue, including products with no batch. Suggestions display measured stock separately from shortages and assumptions. Refresh before relying on a saved suggestion. No suggestion creates or consumes stock. Tests, live generation and device validation remain pending.

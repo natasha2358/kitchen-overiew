@@ -76,6 +76,8 @@ Exit: an import changes stock once at most, confirmation is all-or-nothing, and 
 
 ## M6: Preference-aware meal suggestions
 
+Implementation checkpoint: migration 006, authenticated generation and Recipes UI are present. Model configuration, quality evaluation and exit verification remain pending.
+
 Dependencies: M3; schedule after M5 to complete the receipt-to-stock path first. Requirements: PRD-07, PRD-09.
 
 Deliver in small increments:

@@ -19,7 +19,7 @@
     "db:types": "node scripts/generate-types.mjs",
     "test:services": "node scripts/test-services.mjs",
     "test:edge": "deno test --allow-read --config supabase/functions/deno.json supabase/functions/_shared/pdf_test.ts",
-    "check:edge": "deno check --config supabase/functions/deno.json supabase/functions/verify-receipt/index.ts supabase/functions/parse-receipt/index.ts",
+    "check:edge": "deno check --config supabase/functions/deno.json supabase/functions/verify-receipt/index.ts supabase/functions/parse-receipt/index.ts supabase/functions/delete-receipt-source/index.ts supabase/functions/suggest-meals/index.ts",
     "test:auth": "node scripts/test-auth.mjs"
   },
   "dependencies": {

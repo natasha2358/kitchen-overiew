@@ -394,3 +394,7 @@ import_map = "./functions/deno.json"
 [functions.delete-receipt-source]
 verify_jwt = true
 import_map = "./functions/deno.json"
+
+[functions.suggest-meals]
+verify_jwt = true
+import_map = "./functions/deno.json"

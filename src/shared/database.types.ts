@@ -34,6 +34,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      food_preferences: {
+        Row: {
+          dietary: string[]
+          excluded: string[]
+          household_id: string
+          revision: number
+          servings: number
+        }
+        Insert: {
+          dietary?: string[]
+          excluded?: string[]
+          household_id: string
+          revision?: number
+          servings?: number
+        }
+        Update: {
+          dietary?: string[]
+          excluded?: string[]
+          household_id?: string
+          revision?: number
+          servings?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_preferences_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: true
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       household_memberships: {
         Row: {
           household_id: string
@@ -180,6 +212,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "inventory_operations_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_suggestions: {
+        Row: {
+          attempt: string
+          attempts: number
+          created_at: string
+          error_code: string | null
+          household_id: string
+          id: string
+          lease_until: string
+          model: string
+          prompt_version: string
+          recipes: Json | null
+          snapshot: Json
+          status: string
+        }
+        Insert: {
+          attempt: string
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          household_id: string
+          id: string
+          lease_until: string
+          model: string
+          prompt_version: string
+          recipes?: Json | null
+          snapshot: Json
+          status: string
+        }
+        Update: {
+          attempt?: string
+          attempts?: number
+          created_at?: string
+          error_code?: string | null
+          household_id?: string
+          id?: string
+          lease_until?: string
+          model?: string
+          prompt_version?: string
+          recipes?: Json | null
+          snapshot?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_suggestions_household_id_fkey"
             columns: ["household_id"]
             isOneToOne: false
             referencedRelation: "households"
@@ -458,6 +543,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      begin_meal_suggestion: {
+        Args: {
+          p_household: string
+          p_model: string
+          p_prompt: string
+          p_request: string
+        }
+        Returns: Json
+      }
       begin_receipt_deletion: { Args: { p_receipt: string }; Returns: Json }
       bootstrap_household: { Args: { p_timezone?: string }; Returns: string }
       confirm_receipt: {
@@ -473,6 +567,16 @@ export type Database = {
         Args: { p_hash: string; p_receipt: string; p_user: string }
         Returns: Json
       }
+      finish_meal_suggestion: {
+        Args: {
+          p_attempt: string
+          p_error?: string
+          p_household: string
+          p_recipes: Json
+          p_request: string
+        }
+        Returns: undefined
+      }
       finish_receipt_deletion: {
         Args: { p_receipt: string; p_token: string; p_user: string }
         Returns: undefined
@@ -483,6 +587,7 @@ export type Database = {
       }
       get_inventory: { Args: { p_household: string }; Returns: Json }
       get_receipt_review: { Args: { p_receipt: string }; Returns: Json }
+      meal_context: { Args: { p_household: string }; Returns: Json }
       mutate_inventory: {
         Args: { p_household: string; p_operation: string; p_request: Json }
         Returns: Json
@@ -495,6 +600,16 @@ export type Database = {
       receipt_duplicate_candidates: {
         Args: { p_receipt: string }
         Returns: Json
+      }
+      save_food_preferences: {
+        Args: {
+          p_dietary: string[]
+          p_excluded: string[]
+          p_household: string
+          p_revision: number
+          p_servings: number
+        }
+        Returns: number
       }
       save_receipt_review: {
         Args: {

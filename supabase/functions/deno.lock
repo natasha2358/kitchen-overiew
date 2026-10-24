@@ -2,6 +2,7 @@
   "version": "5",
   "specifiers": {
     "npm:@supabase/supabase-js@2.118.0": "2.118.0",
+    "npm:decimal.js@10.6.0": "10.6.0",
     "npm:pdf-lib@1.17.1": "1.17.1",
     "npm:zod@4.6.7": "4.6.7"
   },
@@ -63,6 +64,9 @@
         "@supabase/storage-js"
       ]
     },
+    "decimal.js@10.6.0": {
+      "integrity": "sha512-YpgQiITW3JXGntzdUmyUR1V812Hn8T1YVXhCu+wO3OpS4eU9l4YdD3qjyiKdV6mvV29zapkMeD390UVEf2lkUg=="
+    },
     "iceberg-js@0.8.1": {
       "integrity": "sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA=="
     },
@@ -91,6 +95,7 @@
   "workspace": {
     "dependencies": [
       "npm:@supabase/supabase-js@2.118.0",
+      "npm:decimal.js@10.6.0",
       "npm:pdf-lib@1.17.1",
       "npm:zod@4.6.7"
     ]

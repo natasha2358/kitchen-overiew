@@ -26,6 +26,7 @@ export const productSchema = z.object({
   name: z.string(),
   base_unit: z.enum(["g", "ml", "item"]),
   aliases: z.array(z.string()),
+  always_available: z.boolean(),
 });
 export function useInventory() {
   const h = useHousehold();
@@ -68,7 +69,7 @@ export function useProducts() {
       if (!h.data) throw new Error("Kitchen not loaded.");
       const result = await backend()
         .from("products")
-        .select("id,name,base_unit,aliases")
+        .select("id,name,base_unit,aliases,always_available")
         .eq("household_id", h.data.id)
         .order("name");
       if (result.error) throw result.error;
