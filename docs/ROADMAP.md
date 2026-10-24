@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: M5–M7 implementation is authorized; tests remain paused. See [Implementation status](IMPLEMENTATION_STATUS.md) for mapping to this roadmap and measured exit gates.
+Status: M8, L1 and L2 are authorized; automated tests have resumed. M8 release gates remain open. See [Implementation status](IMPLEMENTATION_STATUS.md) for mapping to this roadmap and measured exit gates.
 Related: [PRD](PRD.md), [Architecture](ARCHITECTURE.md), [Contributor instructions](../AGENTS.md).
 
 Work in the order below. Split each milestone into reviewable changes that can be verified independently. Do not advance past an exit gate with unresolved data integrity or authorization failures.
@@ -105,6 +105,8 @@ Verify: partial batch use; allocation across batches; expiry ordering; unknown c
 Exit: cooking changes stock only after explicit confirmation, never goes negative, and never partially deducts or repeats one event.
 
 ## M8: Android MVP validation and release readiness
+
+Checkpoint: automated client/database/Auth checks passed; Edge networking and other release gates remain open. See [Release readiness](RELEASE_READINESS.md).
 
 Dependencies: M1-M7. Requirements: PRD-01 through PRD-09.
 

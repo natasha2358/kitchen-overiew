@@ -39,7 +39,7 @@ Supabase authentication requires email confirmation. Local emails are available 
 
 ## Checks
 
-Tests are currently paused at the user’s request. The commands below are for when testing resumes; automatic CI triggers are also paused.
+Automated testing has resumed. See docs/RELEASE_READINESS.md for passing checks and remaining release gates.
 
 ```sh
 npm run check        # lint, strict TypeScript, Jest
@@ -63,7 +63,7 @@ Run `supabase functions serve` in another terminal when using receipt uploads. B
 
 `parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Automatic extraction is intentionally not wired to a model: real supermarket fixtures and a measured parser/model choice are missing. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Saved manual reviews can now be confirmed into stock, with duplicate warnings and retry protection. Source PDF deletion preserves confirmation history. These flows remain unverified while tests are paused. Meal generation is available behind the configuration below. Shopping lists and weekly planning remain later work.
 
-Additional prepared commands (execution currently paused at the user's request):
+Additional checks:
 
 ```sh
 npm run test:auth       # local Mailpit email confirmation/recovery and Auth
@@ -72,7 +72,7 @@ npm run test:edge       # synthetic PDF and proposal contracts
 npm run test:services   # Auth, private Storage and Edge integration
 ```
 
-The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–008 applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full backend integration remains unverified and tests remain paused. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
+The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–008 applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full backend integration remains unverified and device and full integration validation remain pending. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
 
 ## Meal suggestions
 
@@ -84,4 +84,4 @@ Save dietary choices, exclusions and servings in Recipes. Optional staple assump
 
 In Recipes, open **Review actual cooking usage** on a saved recipe, or **Record a meal manually / recover cooking**. Review actual quantities and batch allocations; the proposal uses usable batches with earliest known expiry first. Enter any amount used outside tracked inventory and explicitly confirm it. Tracked plus untracked must equal actual usage. Press **Cooked — confirm actual usage** once ready.
 
-A lost response is reconciled using **Retry pending cooking confirmation**, including after restarting the app. **Record another meal** starts a distinct cooking event. History retains untracked usage without stock movements. No OpenAI key is needed for manual inventory, manual receipt confirmation, or manual cooking. These flows have implementation and static-check evidence only; integration/device tests are paused.
+A lost response is reconciled using **Retry pending cooking confirmation**, including after restarting the app. **Record another meal** starts a distinct cooking event. History retains untracked usage without stock movements. No OpenAI key is needed for manual inventory, manual receipt confirmation, or manual cooking. These flows have implementation and static-check evidence only; integration/device acceptance is incomplete.

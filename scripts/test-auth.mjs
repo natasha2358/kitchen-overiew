@@ -49,7 +49,10 @@ try {
   const confirmed = await fetch(await emailLink(/confirm/i), {
     redirect: "manual",
   });
-  assert.equal(confirmed.status, 302);
+  assert.ok(
+    [302, 303].includes(confirmed.status),
+    "confirmation redirects to the app",
+  );
   assert.equal(
     (await api.auth.signInWithPassword({ email, password })).error,
     null,
@@ -60,7 +63,7 @@ try {
   assert.equal(household.error, null);
   assert.equal((await api.auth.resetPasswordForEmail(email)).error, null);
   const reset = await fetch(await emailLink(/reset/i), { redirect: "manual" });
-  assert.equal(reset.status, 302);
+  assert.ok([302, 303].includes(reset.status), "recovery redirects to the app");
   const location = reset.headers.get("location");
   assert.ok(location);
   const params = new URLSearchParams(new URL(location).hash.slice(1));

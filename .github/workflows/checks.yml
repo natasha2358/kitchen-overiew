@@ -1,6 +1,5 @@
 name: Checks
-# Automatic triggers are paused at the user's request. Restore after testing resumes.
-on: workflow_dispatch
+on: [push, pull_request, workflow_dispatch]
 jobs:
   application:
     runs-on: ubuntu-latest

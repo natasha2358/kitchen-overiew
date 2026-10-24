@@ -2,7 +2,7 @@
 
 Branch: `feat/smart-kitchen-foundation`, pushed to GitHub at the user’s request. No merge, app publication, production deployment, paid infrastructure, or external account modification was performed.
 
-**Testing is paused at the user's request.** The original four milestones and M5–M7 implementation are present. Runtime verification of authentication, inventory, and receipt flows remains incomplete; do not treat implementation as a verified release.
+**Automated testing resumed at the user's request on 2026-10-24.** The original four milestones and M5–M7 implementation are present. Runtime verification of authentication, inventory, and receipt flows remains incomplete; do not treat implementation as a verified release.
 
 ## Scope and milestone mapping
 
@@ -135,3 +135,13 @@ Final review also tied receipt duplicate acknowledgement to candidate IDs rather
 ### Next authorized work when testing resumes
 
 Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run check:edge`, `npm run test:edge`, `npm run test:db`, `npm run test:auth`, and `npm run test:services` against an isolated local backend, fixing failures before claiming milestone exit gates. Extend Edge integration to generation/refusal/lease and deletion/replacement cases, then exercise the full Android journey. Restore automatic CI only when the testing pause is lifted. Paid model quality evaluation and production publication remain separate authorization decisions.
+
+## M8 — release-readiness checkpoint
+
+Automated tests resumed. Client lint/typecheck and all 42 tests passed; real database isolation, rollback and concurrency suites passed. Auth initially failed due to a harness assumption of HTTP 302; the pinned server returns 303, and accepting both valid redirect codes allowed the complete email recovery suite to pass. Edge structural/proposal tests passed. Added safe operational telemetry and a telemetry privacy test; restored automatic CI triggers.
+
+`test:services` failed at an Edge authorization request (expected 404, received 500) because the runtime remains unavailable; container DNS separately returned EAI_AGAIN. No security check was disabled. M8 remains incomplete: physical Android validation, full Edge integration, model/receipt fixture evaluation, account erasure implementation/verification and staging rehearsal are outstanding. [Release readiness](RELEASE_READINESS.md) defines the exact gates, including an account-erasure acceptance specification. No user data was deleted, no deployment/publication occurred.
+
+Proceeding with independently authorized L1/L2 implementation does not mark M8 passed. Earlier paused-test notes above are historical checkpoints, superseded by this section.
+
+M8 build evidence: Android Hermes and web exports passed (`npm run build` with cloud cache/offline environment settings). All four Edge tests, including telemetry privacy, passed. These exports are not native APK/device verification.
