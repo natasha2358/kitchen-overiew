@@ -12,7 +12,7 @@ M5 has not started. Preparation targets confirmation of **manually reviewed** re
 
 ## Required verification before an M5 readiness claim
 
-- Full local Auth, Storage, API and Edge services start; migration 004 applies.
+- Auth, Storage and API services have started, and migration 004 is applied. Edge runtime still needs working container DNS for its bootstrap dependencies; it is currently excluded. Full service integration remains unverified.
 - `npm run test:db`: household isolation, transactional stock changes, concurrency, receipt ownership and source preservation.
 - `npm run test:auth`: signup, email verification, login, recovery and logout.
 - `npm run test:services`: private PDF access, immutable uploads, server verification, concurrent hash deduplication and unchanged stock.

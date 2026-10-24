@@ -17,7 +17,6 @@ npm ci
 supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime
 supabase migration up --local
 npm run db:types
-npm run test:db
 ```
 
 Use `SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime` if ECR access is unavailable. The CLI uses the official Supabase Docker Hub images. Start/migrate an existing instance; do not reset a database containing user data.
@@ -39,6 +38,8 @@ Supabase authentication requires email confirmation. Local emails are available 
 5. Create an account, verify its email using the local Mailpit link on the same client, then sign in. A household and three default locations are provisioned once.
 
 ## Checks
+
+Tests are currently paused at the user’s request. The commands below are for when testing resumes; automatic CI triggers are also paused.
 
 ```sh
 npm run check        # lint, strict TypeScript, Jest
@@ -71,4 +72,4 @@ npm run test:edge       # synthetic PDF and proposal contracts
 npm run test:services   # Auth, private Storage and Edge integration
 ```
 
-The full backend needs sufficient Docker storage. In this cloud instance only PostgreSQL and postgres-meta are running. Migrations 001–003 and database type generation completed; migration 004 requires the missing Storage service schema. Full backend integration has not passed. Use Docker Desktop/overlay2 locally for the complete workflow. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
+The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with all four migrations applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full backend integration remains unverified and tests remain paused. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
