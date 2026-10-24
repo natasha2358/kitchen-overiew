@@ -1,6 +1,6 @@
 # Product requirements
 
-Status: approved documentation baseline; application implementation has not started.
+Status: approved requirements baseline; implementation progress and verification are tracked in [Implementation status](IMPLEMENTATION_STATUS.md).
 Related: [Architecture](ARCHITECTURE.md), [Roadmap](ROADMAP.md), [Contributor instructions](../AGENTS.md).
 
 ## Purpose and audience

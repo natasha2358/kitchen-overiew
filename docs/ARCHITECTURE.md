@@ -1,6 +1,6 @@
 # Architecture
 
-Status: design baseline only. No application, SQL migrations, or services exist yet.
+Status: architecture baseline. Implementation and verification are tracked in [Implementation status](IMPLEMENTATION_STATUS.md).
 Related: [PRD](PRD.md), [Roadmap](ROADMAP.md), [Contributor instructions](../AGENTS.md).
 
 ## System and ownership boundaries

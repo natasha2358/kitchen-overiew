@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: documentation baseline. The current task creates documentation only; every implementation milestone requires its own requested scope.
+Status: implementation of the user-authorized four-milestone assignment is underway. See [Implementation status](IMPLEMENTATION_STATUS.md) for mapping to this roadmap and measured exit gates.
 Related: [PRD](PRD.md), [Architecture](ARCHITECTURE.md), [Contributor instructions](../AGENTS.md).
 
 Work in the order below. Split each milestone into reviewable changes that can be verified independently. Do not advance past an exit gate with unresolved data integrity or authorization failures.
