@@ -79,3 +79,9 @@ The cloud instance currently runs the database/metadata subset, not the full app
 4. When testing is authorized again, run the prepared lint/type/unit, database, Auth/email, Edge, and Storage integration commands. Fix any discovered failures before claiming readiness.
 5. Run Android startup/navigation, email callbacks, inventory, picker/cancel, upload recovery, and review on a real device/emulator. Native/API integration remains the main verification gap.
 6. Obtain sanitized supermarket fixtures and make a separately evaluated server-side parsing implementation. Keep privileged/model credentials server-side.
+
+## M5 preparation checkpoint
+
+The user reaffirmed the testing pause. No tests were run during this preparation. Receipt review now retains unsaved edits across background refreshes, uses the revision on which edits were based, and offers explicit reload/discard handling. Review feedback now flags invalid values and product/unit dimension mismatches. TypeScript compilation passed during this work; additional tests were written but not executed.
+
+The image-flattening helper now supports the pinned Storage and Edge runtime images as well as PostgreSQL. Storage image preparation completed; Edge image preparation and restarting the full backend are still in progress at this checkpoint. Migration 004 remains unapplied until the Storage service schema is available. See [M5 readiness](M5_READINESS.md) for the remaining gates; M5 itself has not started.

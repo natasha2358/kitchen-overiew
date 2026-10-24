@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Local Docker vfs workaround. Requires trusted crane on PATH; never pushes images."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -7,8 +8,10 @@ import re
 import subprocess
 import tempfile
 
-source = 'registry-1.docker.io/supabase/postgres:17.6.1.075'
-target = 'supabase/postgres:17.6.1.075'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--image', default='supabase/postgres:17.6.1.075', choices=['supabase/postgres:17.6.1.075', 'supabase/storage-api:v1.35.3', 'supabase/edge-runtime:v1.70.0'])
+target = parser.parse_args().image
+source = 'registry-1.docker.io/' + target
 crane = os.environ.get('CRANE_BIN', 'crane')
 
 def output(args):

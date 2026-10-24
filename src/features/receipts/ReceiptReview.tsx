@@ -27,6 +27,7 @@ import {
 } from "../../../supabase/functions/_shared/contracts";
 function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
   const [lines, setLines] = useState<ReceiptLine[]>(receipt.lines);
+  const [revision, setRevision] = useState(receipt.revision);
   const [source, setSource] = useState("");
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -51,16 +52,38 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
       const valid = z.array(receiptLineSchema).max(200).parse(lines);
       const r = await backend().rpc("save_receipt_review", {
         p_receipt: receipt.id,
-        p_revision: receipt.revision,
+        p_revision: revision,
         p_lines: valid.map(({ proposed, ...line }) => line),
       });
       if (r.error) throw r.error;
+      setRevision(r.data);
       setDirty(false);
       setNotice("Draft saved. Inventory is unchanged.");
       await client.invalidateQueries({
         queryKey: ["receipt", h.data?.id, receipt.id],
       });
       await client.invalidateQueries({ queryKey: ["receipts", h.data?.id] });
+    } catch (e) {
+      setError(messageOf(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function reload() {
+    setBusy(true);
+    setError("");
+    try {
+      if (!online) throw new Error("Reconnect before reloading.");
+      const result = await backend().rpc("get_receipt_review", {
+        p_receipt: receipt.id,
+      });
+      if (result.error) throw result.error;
+      const latest = receiptReviewSchema.parse(result.data);
+      setLines(latest.lines);
+      setRevision(latest.revision);
+      setDirty(false);
+      setNotice("Latest saved review loaded.");
+      client.setQueryData(["receipt", h.data?.id, receipt.id], latest);
     } catch (e) {
       setError(messageOf(e));
     } finally {
@@ -117,6 +140,18 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
         </Body>
         {notice && <Body>{notice}</Body>}
         {error && <Problem message={error} />}
+        {receipt.revision > revision && (
+          <Problem message="A newer saved review is available. Your edits have been kept. Reload it before making further changes." />
+        )}
+        <Button
+          title={
+            dirty
+              ? "Discard my edits and reload saved review"
+              : "Reload saved review"
+          }
+          onPress={() => void reload()}
+          disabled={busy || !online}
+        />
         {receipt.status === "uploading" && (
           <>
             <Body>
@@ -196,7 +231,10 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
                 onPress={() => change(line.id, { included: !line.included })}
                 disabled={busy}
               />
-              {reviewIssues(line).map((issue) => (
+              {reviewIssues(
+                line,
+                products.data?.find((p) => p.id === line.product_id),
+              ).map((issue) => (
                 <Body key={issue}>{issue}</Body>
               ))}
             </Card>
@@ -251,12 +289,7 @@ function Review() {
   const receipt = useReceipt(id);
   if (receipt.isPending) return <Loading />;
   if (receipt.isError) return <Problem message={messageOf(receipt.error)} />;
-  return (
-    <Editor
-      key={`${receipt.data.id}:${receipt.data.revision}:${receipt.data.status}`}
-      receipt={receipt.data}
-    />
-  );
+  return <Editor key={receipt.data.id} receipt={receipt.data} />;
 }
 export function ReceiptReview() {
   return (

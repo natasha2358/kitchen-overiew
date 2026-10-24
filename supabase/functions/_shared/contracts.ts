@@ -4,7 +4,7 @@ export const receiptLineSchema = z
     id: z.uuid(),
     source_label: z.string().min(1).max(500),
     proposed: z.unknown().nullable().optional(),
-    reviewed_name: z.string().max(120).nullable(),
+    reviewed_name: z.string().trim().max(120).nullable(),
     quantity: z
       .string()
       .regex(/^\d{1,12}(\.\d{1,6})?$/)
@@ -53,9 +53,17 @@ export const extractionProposalSchema = z
       .max(200),
   })
   .strict();
-export function reviewIssues(line: ReceiptLine): string[] {
+export function reviewIssues(
+  line: ReceiptLine,
+  product?: { base_unit: "g" | "ml" | "item" },
+): string[] {
   if (!line.included) return [];
   const issues: string[] = [];
+  if (!receiptLineSchema.safeParse(line).success)
+    issues.push("Correct invalid quantity, date, or line values.");
+  const base = line.unit === "kg" ? "g" : line.unit === "l" ? "ml" : line.unit;
+  if (product && base && product.base_unit !== base)
+    issues.push("The unit does not match the selected product.");
   if (!line.reviewed_name?.trim() && !line.product_id)
     issues.push("Choose a product or name.");
   if (!line.quantity || !line.unit)

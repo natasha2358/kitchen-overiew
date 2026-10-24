@@ -32,3 +32,17 @@ test("zero, fractional item counts and impossible dates are invalid", () => {
     receiptLineSchema.safeParse({ ...line, expiry: "2026-02-30" }).success,
   ).toBe(false);
 });
+
+test("review flags incompatible product dimensions before confirmation", () => {
+  expect(
+    reviewIssues({ ...line, unit: "ml", quantity: "10" }, { base_unit: "g" }),
+  ).toContain("The unit does not match the selected product.");
+  expect(
+    reviewIssues({ ...line, unit: "kg", quantity: "1" }, { base_unit: "g" }),
+  ).not.toContain("The unit does not match the selected product.");
+});
+test("invalid nonempty quantities do not appear review-ready", () => {
+  expect(reviewIssues({ ...line, quantity: "NaN", unit: "g" })).toContain(
+    "Correct invalid quantity, date, or line values.",
+  );
+});

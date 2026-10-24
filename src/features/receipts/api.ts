@@ -33,6 +33,8 @@ export function useReceipt(id: string) {
   const h = useHousehold();
   return useQuery({
     queryKey: ["receipt", h.data?.id, id],
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     enabled: !!h.data && z.uuid().safeParse(id).success,
     queryFn: async () => {
       const r = await backend().rpc("get_receipt_review", { p_receipt: id });
