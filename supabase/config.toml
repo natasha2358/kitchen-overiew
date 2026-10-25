@@ -398,3 +398,7 @@ import_map = "./functions/deno.json"
 [functions.suggest-meals]
 verify_jwt = true
 import_map = "./functions/deno.json"
+
+[functions.erase-account]
+verify_jwt = true
+import_map = "./functions/deno.json"

@@ -6,6 +6,10 @@ import { createClient } from "@supabase/supabase-js";
 import pg from "pg";
 import { localBackend } from "./local-backend.mjs";
 const settings = localBackend();
+const functionURL =
+  process.env.FUNCTIONS_TEST_URL || `${settings.API_URL}/functions/v1`;
+if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+\/functions\/v1$/.test(functionURL))
+  throw new Error("Function tests require a loopback endpoint");
 const options = { auth: { persistSession: false, autoRefreshToken: false } };
 const admin = createClient(
   settings.API_URL,
@@ -98,7 +102,7 @@ try {
   const aToken = ok(await a.auth.getSession()).session.access_token,
     bToken = ok(await b.auth.getSession()).session.access_token;
   async function edge(name, token, id) {
-    return fetch(`${settings.API_URL}/functions/v1/${name}`, {
+    return fetch(`${functionURL}/${name}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -186,6 +190,58 @@ try {
     (await edge("verify-receipt", aToken, malformed.id)).status,
     422,
   );
+  assert.equal(
+    (await edge("delete-receipt-source", bToken, receipt.id)).status,
+    409,
+  );
+  assert.equal(
+    (await edge("delete-receipt-source", "invalid", receipt.id)).status,
+    401,
+  );
+  assert.equal(
+    (await edge("delete-receipt-source", aToken, receipt.id)).status,
+    200,
+  );
+  assert.equal(
+    (await edge("delete-receipt-source", aToken, receipt.id)).status,
+    200,
+  );
+  assert.ok(
+    (await a.storage.from("receipts").download(receipt.object_path)).error,
+  );
+  const retained = ok(
+    await a
+      .from("receipt_imports")
+      .select("verified_hash,source_deleted_at")
+      .eq("id", receipt.id)
+      .single(),
+  );
+  assert.ok(retained.verified_hash && retained.source_deleted_at);
+  const replacement = ok(
+    await a.rpc("prepare_receipt", {
+      p_household: h,
+      p_operation: randomUUID(),
+      p_filename: "replacement.pdf",
+    }),
+  );
+  paths.push(replacement.object_path);
+  ok(
+    await a.storage
+      .from("receipts")
+      .upload(replacement.object_path, pdf, { contentType: "application/pdf" }),
+  );
+  const restored = await edge("verify-receipt", aToken, replacement.id);
+  assert.equal(restored.status, 200);
+  assert.equal((await restored.json()).id, receipt.id);
+  const current = ok(
+    await a
+      .from("receipt_imports")
+      .select("source_path,source_deleted_at")
+      .eq("id", receipt.id)
+      .single(),
+  );
+  assert.equal(current.source_path, replacement.object_path);
+  assert.equal(current.source_deleted_at, null);
   const disabled = await edge("parse-receipt", aToken, receipt.id);
   assert.equal(disabled.status, 501);
   assert.equal((await disabled.json()).code, "PARSING_NOT_CONFIGURED");

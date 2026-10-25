@@ -136,6 +136,7 @@ As an owner, I want clear feedback and control of my receipt files.
 - Offline mode is clearly indicated and blocks mutations and AI requests. Any in-memory data still visible is marked as potentially stale; persistence across app restarts is not promised.
 - Loading and pending states prevent accidental repeated taps; database guarantees still protect repeated requests.
 - Private PDFs can be deleted without reversing confirmed stock movements. A failed deletion is reported and can be retried.
+- A sole owner can permanently erase their account and household after current-password verification and explicit confirmation. Freeze writes first; remove private files, household records and finally Auth identity. Interrupted deletion remains resumable. Clear pending drafts on the requesting device before server deletion.
 - Before the first receipt upload, explain that extracted text is sent to OpenAI for interpretation and the PDF may be sent for vision fallback. Explain that relevant stock, staple designations, and preferences are used for meal suggestions.
 - Do not expose API secrets or include receipt contents, signed URLs, or sensitive preferences in routine logs.
 

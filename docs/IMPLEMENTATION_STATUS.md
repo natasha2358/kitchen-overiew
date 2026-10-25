@@ -165,3 +165,25 @@ Migration applied locally and database types regenerated. ESLint and TypeScript 
 Milestone commits for this assignment: M8 checkpoint `2f8b07b` (incomplete release gates), L1 `60ca9c0`, and L2 is the commit containing this section. Nothing was pushed or merged, and no app was published.
 
 L2 final build: Android Hermes and web exports passed on the completed Shopping/Planner code. This is a JavaScript export, not an APK or physical-device acceptance result.
+
+## MVP gap closure — account erasure and handler integration (2026-10-25)
+
+User selected MVP gaps before L3 shared households. Previous milestones through L2 (`884f0f3`) were pushed to `feat/smart-kitchen-foundation`. L3 remains unstarted.
+
+Implemented Account settings and password-confirmed, resumable erasure across private Storage, household data and Auth. Migrations 011–013 add private jobs, service-only RPCs, frozen-household RLS, write/upload guards and bootstrap protection. Preparation captures receipt IDs so the requesting device clears pending household drafts before irreversible deletion. Continuation revokes sessions, removes files through Storage APIs, purges database rows atomically and deletes Auth last. Sole-owner enforcement prevents this MVP flow deleting a shared household. Auth-gone/job-cleanup failure requires the scoped operator reconciliation documented in Architecture.
+
+Extracted function handlers from their Deno entrypoints and added a loopback-only harness using real local Auth and Storage. It is test infrastructure, not a replacement backend or proof that the actual Edge gateway works. Added the harness to CI; remote CI outcome has not been inspected. No credentials, production deployment, main merge or app publication were introduced. Only disposable test-created accounts/data were deleted.
+
+Verification on this checkpoint:
+- `npm run check`: ESLint, strict TypeScript and 48 tests in 11 suites passed.
+- `npm run test:db`: isolation, rollback, stock/receipt/cooking/planner concurrency and new erasure authorization, injected purge rollback, Auth-last and freeze-concurrency tests passed.
+- `npm run test:handlers`: real Auth/private Storage handler tests passed, including deletion/replacement of receipt source, wrong password/foreign-target denial, frozen uploads, injected Storage failure and resumed complete erasure preserving another account.
+- `npm run check:edge` and `npm run test:edge`: compilation and all four structural/contract/telemetry tests passed.
+- `npm run build`: Android Hermes and web exports passed using documented cloud cache/offline settings. This is not APK or native UI validation.
+- Migrations applied locally; database types generated from the schema. `git diff --check` passed.
+
+A preliminary concurrency assertion incorrectly expected a new shared lock to fail while freezing was only queued. Corrected the test to assert failure once the eraser actually holds its exclusive lock, and reran the full database suite successfully. Existing writes may finish before freezing; they cannot write after the freeze is committed.
+
+Actual Supabase Edge startup remains blocked: container DNS failed; a proxy-enabled retry failed its tunnel and deno.land returned HTTP 403 through the environment proxy. No JWT/TLS/RLS protections were bypassed. Thus `test:services` through the actual runtime is still an open gate despite passing handler tests.
+
+Next: run the actual runtime and native account/receipt journey in a working Docker/device environment; supply sanitized representative supermarket fixtures to implement and measure extraction (currently explicit 501); configure and separately authorize model quality evaluation; rehearse staging migrations and native builds before any release. M8 remains incomplete. See RELEASE_READINESS.md for the full evidence matrix and README for Android setup.

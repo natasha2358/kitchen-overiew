@@ -150,18 +150,21 @@ export type Database = {
       households: {
         Row: {
           created_at: string
+          erasure_started_at: string | null
           id: string
           name: string
           timezone: string
         }
         Insert: {
           created_at?: string
+          erasure_started_at?: string | null
           id?: string
           name?: string
           timezone?: string
         }
         Update: {
           created_at?: string
+          erasure_started_at?: string | null
           id?: string
           name?: string
           timezone?: string
@@ -767,6 +770,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      account_erasure_batch: { Args: { p_user: string }; Returns: Json }
+      begin_account_erasure: { Args: { p_user: string }; Returns: undefined }
       begin_meal_suggestion: {
         Args: {
           p_household: string
@@ -795,6 +800,7 @@ export type Database = {
         Args: { p_hash: string; p_receipt: string; p_user: string }
         Returns: Json
       }
+      finish_account_erasure: { Args: { p_user: string }; Returns: undefined }
       finish_meal_suggestion: {
         Args: {
           p_attempt: string
@@ -830,6 +836,7 @@ export type Database = {
         Args: { p_filename: string; p_household: string; p_operation: string }
         Returns: Json
       }
+      purge_account_household: { Args: { p_user: string }; Returns: undefined }
       receipt_duplicate_candidates: {
         Args: { p_receipt: string }
         Returns: Json

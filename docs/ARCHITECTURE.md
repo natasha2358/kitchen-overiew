@@ -227,3 +227,15 @@ The cooking RPC shares the household operation ledger, locks batches in UUID ord
 Cooking requests may carry a plan ID/revision. The confirmation transaction locks that plan before stock rows, rejects cancellation/stale recipe references, and records the cooking link atomically with the deductions. A committed plan returns its original cooking result on retries, including new operation IDs. Cooked plans cannot be edited or cancelled. A new plan remains a distinct event even for the same recipe.
 
 Week arithmetic uses UTC calendar components to avoid DST shifts, while the server supplies today in the household timezone. Recipe scaling uses Decimal and rejects fractional items or results requiring more than six decimal places. Users can then review actual quantities manually; planning never guesses a deduction.
+
+## Account erasure
+
+Migrations 011–013 implement a private, resumable erasure job and service-role-only RPCs. The authenticated `erase-account` handler verifies the current password against the caller's identity; request bodies cannot nominate another user or household. This workflow requires sole ownership and rejects shared households.
+
+Preparation records receipt IDs for device cleanup and freezes household access. Household write and Storage upload triggers also protect service-role writes; household locks serialize freezing with active writes, and NOWAIT guards return a retryable conflict rather than deadlocking. Bootstrap cannot recreate a household during erasure.
+
+The client clears its persisted household operation drafts and query cache before continuation. The handler revokes sessions, removes up to 1,000 remaining receipt objects per request through the Storage API, then atomically purges household rows in foreign-key order. Auth deletion happens last; the private job is removed afterward. Partial failures leave a resumable frozen job. A user can sign in and access Account without successful household bootstrap. Other devices' local storage cannot be remotely wiped; their server access is frozen.
+
+If Auth deletion succeeds but final job cleanup fails, operator reconciliation is required: verify the Auth identity is absent, then invoke service-only `finish_account_erasure(p_user)` for that exact job using trusted administration tooling. The RPC refuses cleanup while the identity exists or database removal is incomplete. Never grant this RPC to application roles.
+
+Application handlers are exported separately from `Deno.serve` entrypoints so a loopback-only test harness can exercise them against real local Auth/Storage. This is test tooling, not another application server. It does not validate the Supabase Edge bootstrap or gateway JWT enforcement.

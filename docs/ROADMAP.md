@@ -106,7 +106,7 @@ Exit: cooking changes stock only after explicit confirmation, never goes negativ
 
 ## M8: Android MVP validation and release readiness
 
-Checkpoint: automated client/database/Auth checks passed; Edge networking and other release gates remain open. See [Release readiness](RELEASE_READINESS.md).
+Checkpoint: account erasure is implemented with local database concurrency and real Auth/Storage handler evidence. Automated client/database/Auth checks passed; actual Edge runtime networking and other release gates remain open. See [Release readiness](RELEASE_READINESS.md).
 
 Dependencies: M1-M7. Requirements: PRD-01 through PRD-09.
 

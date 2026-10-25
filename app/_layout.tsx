@@ -15,6 +15,7 @@ export default function RootLayout() {
             headerTitle: "Smart Kitchen",
           }}
         >
+          <Stack.Screen name="account" options={{ title: "Account" }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="inventory/new"

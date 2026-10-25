@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { Fragment, ReactNode, useState } from "react";
 import { appConfig } from "../../shared/config";
 import { backend } from "../../shared/supabase";
@@ -7,6 +8,7 @@ import { AuthPanel } from "./AuthPanel";
 import { useAuth } from "./Providers";
 import { useHousehold } from "./useHousehold";
 export function AuthGate({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const { loading, session, online, recovery } = useAuth();
   const household = useHousehold();
   const [error, setError] = useState("");
@@ -45,6 +47,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
               if (result.error) setError(messageOf(result.error));
             });
         }}
+      />
+      <Button
+        title="Account settings"
+        onPress={() => router.push("/account")}
       />
       {household.isError ? (
         <Card>

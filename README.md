@@ -59,7 +59,7 @@ Local email rate limits are raised to 100/hour in `supabase/config.toml` for rep
 
 ## Receipt foundation
 
-Run `supabase functions serve` in another terminal when using receipt uploads. Both Edge Functions require JWT verification and perform their own user/ownership checks. The private `receipts` bucket is created by migration. No OpenAI credential is needed for upload verification or manual review.
+Run `supabase functions serve` in another terminal when using receipt uploads. All Edge Functions require JWT verification and perform their own user/ownership checks. The private `receipts` bucket is created by migration. No OpenAI credential is needed for upload verification or manual review.
 
 `parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Automatic extraction is intentionally not wired to a model: real supermarket fixtures and a measured parser/model choice are missing. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Saved manual reviews can now be confirmed into stock, with duplicate warnings and retry protection. Source PDF deletion preserves confirmation history. Database confirmation and retry tests pass; full Edge/device flows remain unverified. Meal generation is available behind the configuration below. Shopping and planning are available as described below.
 
@@ -69,22 +69,23 @@ Additional checks:
 npm run test:auth       # local Mailpit email confirmation/recovery and Auth
 npm run check:edge      # Edge Function TypeScript compilation
 npm run test:edge       # synthetic PDF and proposal contracts
-npm run test:services   # Auth, private Storage and Edge integration
+npm run test:services   # Auth, private Storage and actual Edge runtime integration
+npm run test:handlers   # real handlers with local Auth/Storage; no Edge bootstrap
 ```
 
-The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–010 applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full Edge integration and device validation remain pending. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
+The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–013 applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full Edge integration and device validation remain pending. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
 
 ## Meal suggestions
 
-Apply all migrations through 010 and serve Edge Functions. Configure `OPENAI_API_KEY` and `OPENAI_MEAL_MODEL` only in an ignored server environment file passed to `supabase functions serve --env-file /path/to/server.env`. Select/evaluate a model that supports Responses structured outputs before claiming recipe quality. No default model or credentials are supplied. Without both values, generation returns `MEALS_NOT_CONFIGURED`. `store:false` is set on requests; this is not a promise of zero provider retention.
+Apply all migrations through 013 and serve Edge Functions. Configure `OPENAI_API_KEY` and `OPENAI_MEAL_MODEL` only in an ignored server environment file passed to `supabase functions serve --env-file /path/to/server.env`. Select/evaluate a model that supports Responses structured outputs before claiming recipe quality. No default model or credentials are supplied. Without both values, generation returns `MEALS_NOT_CONFIGURED`. `store:false` is set on requests; this is not a promise of zero provider retention.
 
-Save dietary choices, exclusions and servings in Recipes. Optional staple assumptions are edited in Kitchen's product catalogue, including products with no batch. Suggestions display measured stock separately from shortages and assumptions. Refresh before relying on a saved suggestion. No suggestion creates or consumes stock. Tests, live generation and device validation remain pending.
+Save dietary choices, exclusions and servings in Recipes. Optional staple assumptions are edited in Kitchen's product catalogue, including products with no batch. Suggestions display measured stock separately from shortages and assumptions. Refresh before relying on a saved suggestion. No suggestion creates or consumes stock. Deterministic domain/database tests pass; live generation and device validation remain pending.
 
 ## Record cooking
 
 In Recipes, open **Review actual cooking usage** on a saved recipe, or **Record a meal manually / recover cooking**. Review actual quantities and batch allocations; the proposal uses usable batches with earliest known expiry first. Enter any amount used outside tracked inventory and explicitly confirm it. Tracked plus untracked must equal actual usage. Press **Cooked — confirm actual usage** once ready.
 
-A lost response is reconciled using **Retry pending cooking confirmation**, including after restarting the app. **Record another meal** starts a distinct cooking event. History retains untracked usage without stock movements. No OpenAI key is needed for manual inventory, manual receipt confirmation, or manual cooking. These flows have implementation and static-check evidence only; integration/device acceptance is incomplete.
+A lost response is reconciled using **Retry pending cooking confirmation**, including after restarting the app. **Record another meal** starts a distinct cooking event. History retains untracked usage without stock movements. No OpenAI key is needed for manual inventory, manual receipt confirmation, or manual cooking. Database atomicity, isolation and concurrency checks pass; device acceptance is incomplete.
 
 ## Shopping
 
@@ -95,3 +96,9 @@ Apply migration 009. Add/edit Shopping items and mark purchases complete; this n
 Apply migration 202610250010. In Planner, add a manual meal or use **Schedule this meal** from a saved recipe. Choose date, meal slot and servings. Plans can be rescheduled, cancelled and restored without changing stock.
 
 Choose **Review actual cooking usage** when you actually cook. Review the batch allocations and any explicitly untracked amounts before confirmation. If serving changes require fractional items or repeating decimals, choose the manual-quantity review and decide actual usage. The plan is marked cooked only with the successful stock transaction; retries cannot cook it twice. Create another plan for another cooking event.
+
+## Account deletion
+
+Apply migrations through 013 and serve Edge Functions. Open **Account settings**, enter the current password and type **DELETE MY ACCOUNT**. This permanently deletes the sole owner's private PDFs, household data and Auth account. Preparation freezes the kitchen; interrupted deletion must be resumed from Account, signing in again if needed. Pending drafts on the requesting device are cleared before server deletion.
+
+Local disposable-account integration and concurrency tests pass. Native UI and deployed runtime validation remain open. The cloud can run `test:handlers` despite blocked Edge bootstrap dependency networking; that harness is test-only and is not a replacement runtime for the app. See [release readiness](docs/RELEASE_READINESS.md).

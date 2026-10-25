@@ -29,4 +29,5 @@ jobs:
       - run: npm run test:auth
       - run: npm run check:edge
       - run: npm run test:edge
+      - run: npm run test:handlers
       - run: npm run db:types && git diff --exit-code -- src/shared/database.types.ts

@@ -3,7 +3,8 @@ type FunctionName =
   | "verify-receipt"
   | "parse-receipt"
   | "delete-receipt-source"
-  | "suggest-meals";
+  | "suggest-meals"
+  | "erase-account";
 // No request bodies, URLs, identifiers, tokens, names or error messages are logged.
 export function observe(
   name: FunctionName,
