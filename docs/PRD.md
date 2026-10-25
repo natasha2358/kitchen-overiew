@@ -26,7 +26,7 @@ Success means users can import a supported receipt, correct its contents, add st
 | Language and units | English interface; metric mass/volume and item counts; receipt languages defined by fixtures |
 | Retention | Private PDFs retained until deleted; import identity and stock history retained after PDF deletion |
 
-Deferred: automatic Gmail/email access, receipt camera capture, barcode scanning, universal receipt/OCR coverage, shopping lists, weekly planning, household sharing, offline editing, notifications, nutrition tracking, and iOS release certification. No microservices or separate processing platform.
+Deferred: automatic Gmail/email access, receipt camera capture, barcode scanning, universal receipt/OCR coverage, household sharing, offline editing, notifications, nutrition tracking, and iOS release certification. No microservices or separate processing platform.
 
 ## User stories and acceptance criteria
 
@@ -162,3 +162,17 @@ These do not block documentation; resolve them at the named milestone before cla
 - Which supermarkets, receipt languages, and digital/scanned variants will the initial sanitized fixture set cover? Resolve in M1.
 - Which embedded-text parser works within Edge Function limits, and which fixture-based checks should trigger PDF vision fallback? Confirm parser choice, quality, latency, cost, and the provisional 10 MiB/10-page envelope in M4 using M1 fixtures.
 - Which AI model, operational deadline, and household usage limits meet the measured receipt and meal requirements? Select and record them in M4/M6; validate production limits in M8.
+
+## Authorized later phases
+
+### PRD-L1: Shopping lists
+
+- Maintain one household shopping list with manual items, positive decimal quantities, compatible canonical units and optional household product references.
+- Edit, mark purchased/unpurchased, remove and restore items with revision checks and recoverable operation IDs. None of these actions creates inventory or stock movements.
+- Review a saved recipe's measured shortages and explicitly add individual ingredients. The server recomputes usable stock; optional staple assumptions never erase a measured shortage.
+- Repeated addition of the same suggestion/recipe/ingredient resolves to its existing shopping item rather than increasing its quantity. Changing requirements remains an explicit item edit.
+- Unknown ingredient mappings remain named shopping items; no package or unit conversion is guessed. RLS denies another household's reads and changes.
+
+### PRD-L2: Weekly meal planning
+
+Authorized next: date/meal-slot scheduling with explicit servings, rescheduling and cancellation. A plan is not a stock reservation or a cooking confirmation; stock changes only through the existing cooking review transaction. Implementation decisions and evidence are tracked in the roadmap/status.

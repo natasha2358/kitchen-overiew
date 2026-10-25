@@ -256,6 +256,16 @@ function Recipes() {
                   </Body>
                 ))}
                 <Button
+                  title="Review shopping shortages"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/shopping",
+                      params: { suggestion: s.id, index: String(index) },
+                    })
+                  }
+                  disabled={!online}
+                />
+                <Button
                   title="Review actual cooking usage"
                   onPress={() =>
                     router.push({

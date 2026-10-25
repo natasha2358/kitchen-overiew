@@ -215,3 +215,7 @@ Meal generation uses one household-scoped persisted request with an attempt toke
 Cooking reviews carry an explicit `cook` action, current preference revision, optional suggestion/recipe reference, and up to 30 actual ingredients with canonical units. Each ingredient has finite batch allocations (up to 100) and a separately acknowledged untracked amount. All quantities remain decimal strings at the API boundary.
 
 The cooking RPC shares the household operation ledger, locks batches in UUID order, checks current expiry in the household timezone, and preserves the actual-use snapshot. Preference saves share an advisory lock with confirmation, preventing acceptance against a concurrently replaced preference set. Batch allocations are never silently reassigned on conflict. Native/browser intent storage retains the original operation ID/request until a definitive response; successful submission locks that review until the user explicitly starts another meal.
+
+### L1 shopping decisions
+
+`shopping_items` stores decimal quantities, compatible product links, optimistic revisions and removed/completed flags. `list_operations` is a separate idempotency ledger for metadata operations, keeping shopping actions out of the stock ledger. Explicit shortage import reads a persisted recipe and current eligible batches server-side; a unique source key (suggestion, recipe, ingredient) prevents repeated imports increasing a list quantity. Existing list edits and completion remain intact on repeated import. No shopping function calls inventory mutations.

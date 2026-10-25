@@ -8,6 +8,7 @@ import { testConfirmation } from "../tests/database/confirmation.mjs";
 import { testMeals } from "../tests/database/meals.mjs";
 import { testCooking } from "../tests/database/cooking.mjs";
 import { testConfirmationConcurrency } from "../tests/database/confirmation-concurrency.mjs";
+import { testShopping } from "../tests/database/shopping.mjs";
 const db = new pg.Client({ connectionString: localBackend().DB_URL });
 await db.connect();
 try {
@@ -18,6 +19,7 @@ try {
   await testConfirmation(db, context);
   await testMeals(db, context);
   await testCooking(db, context);
+  await testShopping(db, context);
   console.log(
     "PASS household isolation, inventory transactions and rollback, receipt ownership, duplicate identity and protected review",
   );

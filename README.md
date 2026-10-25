@@ -1,6 +1,6 @@
 # Smart Kitchen
 
-Android-first Expo application for household grocery inventory and private receipt drafts. Recipes supports configured meal suggestions; Shopping and Planner remain marked as planned. See [implementation status](docs/IMPLEMENTATION_STATUS.md) for tested capabilities and limitations.
+Android-first Expo application for household grocery inventory and private receipt drafts. Recipes supports configured meal suggestions; Shopping supports manual lists and recipe shortages. Planner is the next phase. See [implementation status](docs/IMPLEMENTATION_STATUS.md) for tested capabilities and limitations.
 
 ## Requirements
 
@@ -85,3 +85,7 @@ Save dietary choices, exclusions and servings in Recipes. Optional staple assump
 In Recipes, open **Review actual cooking usage** on a saved recipe, or **Record a meal manually / recover cooking**. Review actual quantities and batch allocations; the proposal uses usable batches with earliest known expiry first. Enter any amount used outside tracked inventory and explicitly confirm it. Tracked plus untracked must equal actual usage. Press **Cooked — confirm actual usage** once ready.
 
 A lost response is reconciled using **Retry pending cooking confirmation**, including after restarting the app. **Record another meal** starts a distinct cooking event. History retains untracked usage without stock movements. No OpenAI key is needed for manual inventory, manual receipt confirmation, or manual cooking. These flows have implementation and static-check evidence only; integration/device acceptance is incomplete.
+
+## Shopping
+
+Apply migration 009. Add/edit Shopping items and mark purchases complete; this never changes Kitchen stock. From a saved recipe, choose **Review shopping shortages** and explicitly add missing ingredients. Repeating an import keeps the existing item (including edits/completion); adjust it in Shopping when needed. Removed items can be shown and restored. Lost responses have a pending-change retry action.

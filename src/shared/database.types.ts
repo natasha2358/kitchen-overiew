@@ -274,6 +274,38 @@ export type Database = {
           },
         ]
       }
+      list_operations: {
+        Row: {
+          created_at: string
+          household_id: string
+          id: string
+          request: Json
+          result: Json
+        }
+        Insert: {
+          created_at?: string
+          household_id: string
+          id: string
+          request: Json
+          result: Json
+        }
+        Update: {
+          created_at?: string
+          household_id?: string
+          id?: string
+          request?: Json
+          result?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "list_operations_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_suggestions: {
         Row: {
           attempt: string
@@ -516,6 +548,63 @@ export type Database = {
           },
         ]
       }
+      shopping_items: {
+        Row: {
+          checked: boolean
+          created_at: string
+          household_id: string
+          id: string
+          label: string
+          product_id: string | null
+          quantity: number
+          removed: boolean
+          revision: number
+          source_key: string | null
+          unit: string
+        }
+        Insert: {
+          checked?: boolean
+          created_at?: string
+          household_id: string
+          id: string
+          label: string
+          product_id?: string | null
+          quantity: number
+          removed?: boolean
+          revision?: number
+          source_key?: string | null
+          unit: string
+        }
+        Update: {
+          checked?: boolean
+          created_at?: string
+          household_id?: string
+          id?: string
+          label?: string
+          product_id?: string | null
+          quantity?: number
+          removed?: boolean
+          revision?: number
+          source_key?: string | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_items_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_items_household_id_product_id_fkey"
+            columns: ["household_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["household_id", "id"]
+          },
+        ]
+      }
       stock_movements: {
         Row: {
           actor_id: string
@@ -656,8 +745,13 @@ export type Database = {
       }
       get_inventory: { Args: { p_household: string }; Returns: Json }
       get_receipt_review: { Args: { p_receipt: string }; Returns: Json }
+      get_shopping: { Args: { p_household: string }; Returns: Json }
       meal_context: { Args: { p_household: string }; Returns: Json }
       mutate_inventory: {
+        Args: { p_household: string; p_operation: string; p_request: Json }
+        Returns: Json
+      }
+      mutate_shopping: {
         Args: { p_household: string; p_operation: string; p_request: Json }
         Returns: Json
       }

@@ -2,28 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { backend } from "../../shared/supabase";
 import { useHousehold } from "../auth/useHousehold";
-import { suggestionSchema } from "../meals/api";
 import { cookingRequestSchema, cookingResultSchema } from "./domain";
-export function useCookingSuggestion(id: string | undefined) {
-  const h = useHousehold();
-  return useQuery({
-    queryKey: ["cooking-suggestion", h.data?.id, id],
-    enabled: !!h.data && !!id,
-    queryFn: async () => {
-      if (!h.data || !id) throw new Error("Suggestion unavailable.");
-      const r = await backend()
-        .from("meal_suggestions")
-        .select(
-          "id,status,snapshot,recipes,error_code,created_at,model,prompt_version",
-        )
-        .eq("household_id", h.data.id)
-        .eq("id", z.uuid().parse(id))
-        .single();
-      if (r.error) throw r.error;
-      return suggestionSchema.parse(r.data);
-    },
-  });
-}
+export { useSuggestion as useCookingSuggestion } from "../meals/api";
 export function useCookingHistory() {
   const h = useHousehold();
   return useQuery({

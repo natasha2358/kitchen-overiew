@@ -145,3 +145,11 @@ Automated tests resumed. Client lint/typecheck and all 42 tests passed; real dat
 Proceeding with independently authorized L1/L2 implementation does not mark M8 passed. Earlier paused-test notes above are historical checkpoints, superseded by this section.
 
 M8 build evidence: Android Hermes and web exports passed (`npm run build` with cloud cache/offline environment settings). All four Edge tests, including telemetry privacy, passed. These exports are not native APK/device verification.
+
+## L1 — shopping lists
+
+Implemented migration 009 and Shopping UI: manual/editable quantities and units, optional product links, purchased/unpurchased, removed/restored items, revision protection and persisted retry recovery. Recipes links to an explicit shortage review. The server recomputes measured shortages from non-expired stock and preserves one item per recipe ingredient on repeat import; staple assumptions do not fabricate stock. No list action changes stock.
+
+Migration applied locally and schema types regenerated. Real database tests passed for cross-household denial/forged product links, direct-write denial, stale revisions, idempotency, decimal shortage calculation and unchanged stock. The old placeholder UI test was replaced with the authenticated configuration boundary check. Physical-device interaction remains unverified; M8 gates remain open.
+
+L1 final checks: ESLint, TypeScript and all 42 client tests passed. The test-only QueryClient uses infinite garbage-collection time to avoid leaving a timer after the configuration-gate test. Database coverage including L1 passed.
