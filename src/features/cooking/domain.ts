@@ -22,6 +22,8 @@ export const actualIngredientSchema = z.object({
 export type ActualIngredient = z.infer<typeof actualIngredientSchema>;
 export const cookingRequestSchema = z.object({
   action: z.literal("cook"),
+  plan_id: z.uuid().nullable().optional(),
+  plan_revision: z.number().int().positive().nullable().optional(),
   suggestion_id: z.uuid().nullable(),
   recipe_index: z.number().int().nonnegative().nullable(),
   preference_revision: z.number().int().nonnegative(),

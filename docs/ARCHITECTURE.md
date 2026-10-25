@@ -219,3 +219,11 @@ The cooking RPC shares the household operation ledger, locks batches in UUID ord
 ### L1 shopping decisions
 
 `shopping_items` stores decimal quantities, compatible product links, optimistic revisions and removed/completed flags. `list_operations` is a separate idempotency ledger for metadata operations, keeping shopping actions out of the stock ledger. Explicit shortage import reads a persisted recipe and current eligible batches server-side; a unique source key (suggestion, recipe, ingredient) prevents repeated imports increasing a list quantity. Existing list edits and completion remain intact on repeated import. No shopping function calls inventory mutations.
+
+### L2 weekly planning decisions
+
+`planned_meals` stores household calendar dates, meal slots, requested servings, optional immutable recipe snapshots, cancellation state and optimistic revisions. Scheduling shares the metadata-only `list_operations` ledger with Shopping. It never reserves stock or calls inventory mutations.
+
+Cooking requests may carry a plan ID/revision. The confirmation transaction locks that plan before stock rows, rejects cancellation/stale recipe references, and records the cooking link atomically with the deductions. A committed plan returns its original cooking result on retries, including new operation IDs. Cooked plans cannot be edited or cancelled. A new plan remains a distinct event even for the same recipe.
+
+Week arithmetic uses UTC calendar components to avoid DST shifts, while the server supplies today in the household timezone. Recipe scaling uses Decimal and rejects fractional items or results requiring more than six decimal places. Users can then review actual quantities manually; planning never guesses a deduction.

@@ -256,6 +256,16 @@ function Recipes() {
                   </Body>
                 ))}
                 <Button
+                  title="Schedule this meal"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/planner",
+                      params: { suggestion: s.id, index: String(index) },
+                    })
+                  }
+                  disabled={!online}
+                />
+                <Button
                   title="Review shopping shortages"
                   onPress={() =>
                     router.push({

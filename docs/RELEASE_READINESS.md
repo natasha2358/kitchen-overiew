@@ -37,3 +37,7 @@ Verify against disposable local accounts: another owner/anonymous caller is deni
 Follow README Android setup. Record device/OS, commit and date for each result. Use isolated fixture accounts. Verify sign-up/email callback, add/edit/waste/move inventory, import/review a PDF, confirm once and retry, delete/re-upload its source, generate with staple off/on/off, confirm 15 ml use as 10 ml tracked + 5 ml explicit untracked, and repeat after lost responses. Check account switching, airplane mode, enlarged text and TalkBack. Record each failure and reproduction; do not replace device evidence with unit-test results.
 
 M8 build evidence: Android Hermes and web exports passed (`npm run build` with cloud cache/offline environment settings). All four Edge tests, including telemetry privacy, passed. These exports are not native APK/device verification.
+
+## L1/L2 follow-through (2026-10-25)
+
+Shopping and weekly planning are implemented. The latest client suite has 45 passing tests, with lint/typechecking passing. Real database tests cover both features, including unchanged stock during list completion/scheduling and concurrent confirmation of one planned meal. Android acceptance must additionally cover shortage import, shopping retry recovery, week navigation, rescheduling/cancellation, serving decisions and planned cooking. These results do not close the earlier account-erasure, Edge, fixture, model or physical-device gates.

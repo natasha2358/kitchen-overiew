@@ -153,3 +153,15 @@ Implemented migration 009 and Shopping UI: manual/editable quantities and units,
 Migration applied locally and schema types regenerated. Real database tests passed for cross-household denial/forged product links, direct-write denial, stale revisions, idempotency, decimal shortage calculation and unchanged stock. The old placeholder UI test was replaced with the authenticated configuration boundary check. Physical-device interaction remains unverified; M8 gates remain open.
 
 L1 final checks: ESLint, TypeScript and all 42 client tests passed. The test-only QueryClient uses infinite garbage-collection time to avoid leaving a timer after the configuration-gate test. Database coverage including L1 passed.
+
+## L2 — weekly planning (2026-10-25)
+
+Implemented migration 202610250010 and Planner UI: Monday–Sunday navigation, manual meals or saved-recipe snapshots, named meal slots, explicit servings, rescheduling, cancellation/restoration, revisions and persisted retry recovery. Recipes links to scheduling. Plans never reserve or change stock. A plan becomes cooked only when its cooking link and stock deductions commit together; one plan cannot be cooked twice, even with different operation IDs. Cooked entries remain immutable history.
+
+Planned servings scale recipe quantities with decimal arithmetic. Fractional item counts and repeating values beyond six decimal places require manual actual-quantity review. Calendar tests cover week/year/DST boundaries.
+
+Migration applied locally and database types regenerated. ESLint and TypeScript passed; all 45 client tests in 10 suites passed. The real PostgreSQL suite passed with L1/L2 authorization, stale revisions, rescheduling/cancellation, no-stock-change scheduling, atomic plan/cooking rollback and linking, repeated cooking and concurrent different-operation confirmations of one plan. Final build evidence is recorded below. Physical Android interaction and M8 release gates remain open.
+
+Milestone commits for this assignment: M8 checkpoint `2f8b07b` (incomplete release gates), L1 `60ca9c0`, and L2 is the commit containing this section. Nothing was pushed or merged, and no app was published.
+
+L2 final build: Android Hermes and web exports passed on the completed Shopping/Planner code. This is a JavaScript export, not an APK or physical-device acceptance result.

@@ -45,6 +45,10 @@ export function useListOperation(
       );
       setNotice("Saved. Inventory is unchanged.");
       await client.invalidateQueries({ queryKey: [scope, h.data.id] });
+      if (scope === "planner")
+        await client.invalidateQueries({
+          queryKey: ["planned-meal", h.data.id],
+        });
       return true;
     } catch (e) {
       setError(messageOf(e));

@@ -359,6 +359,76 @@ export type Database = {
           },
         ]
       }
+      planned_meals: {
+        Row: {
+          cancelled: boolean
+          cooking_id: string | null
+          created_at: string
+          household_id: string
+          id: string
+          planned_on: string
+          recipe: Json | null
+          recipe_index: number | null
+          revision: number
+          servings: number
+          slot: string
+          suggestion_id: string | null
+          title: string
+        }
+        Insert: {
+          cancelled?: boolean
+          cooking_id?: string | null
+          created_at?: string
+          household_id: string
+          id: string
+          planned_on: string
+          recipe?: Json | null
+          recipe_index?: number | null
+          revision?: number
+          servings: number
+          slot: string
+          suggestion_id?: string | null
+          title: string
+        }
+        Update: {
+          cancelled?: boolean
+          cooking_id?: string | null
+          created_at?: string
+          household_id?: string
+          id?: string
+          planned_on?: string
+          recipe?: Json | null
+          recipe_index?: number | null
+          revision?: number
+          servings?: number
+          slot?: string
+          suggestion_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_meals_household_id_cooking_id_fkey"
+            columns: ["household_id", "cooking_id"]
+            isOneToOne: true
+            referencedRelation: "cooking_confirmations"
+            referencedColumns: ["household_id", "id"]
+          },
+          {
+            foreignKeyName: "planned_meals_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planned_meals_household_id_suggestion_id_fkey"
+            columns: ["household_id", "suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "meal_suggestions"
+            referencedColumns: ["household_id", "id"]
+          },
+        ]
+      }
       products: {
         Row: {
           aliases: string[]
@@ -773,6 +843,10 @@ export type Database = {
           p_servings: number
         }
         Returns: number
+      }
+      save_planned_meal: {
+        Args: { p_household: string; p_operation: string; p_request: Json }
+        Returns: Json
       }
       save_receipt_review: {
         Args: {

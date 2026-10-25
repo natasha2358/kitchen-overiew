@@ -91,7 +91,7 @@ Exit: every suggested ingredient has a measured availability result, a labeled d
 
 ## M7: Atomic cooking confirmation
 
-Implementation checkpoint: migrations 007–008, cooking review and history are present. Tests are paused; atomicity/concurrency and Android exit verification remain pending.
+Implementation checkpoint: migrations 007–008, cooking review and history are present. Database atomicity/concurrency checks now pass; Android exit verification remains pending.
 
 Dependencies: M6. Requirements: PRD-08.
 
@@ -126,7 +126,7 @@ Exit: every MVP acceptance criterion has passing evidence, no unresolved stock-i
 | Phase | Capability | Prerequisite and verification |
 | --- | --- | --- |
 | L1 | Shopping lists — implemented | Migration 009, manual/edit/complete/remove/restore and explicit recipe shortages; database isolation/retry/no-stock-change checks passed |
-| L2 | Weekly planning | Stable recipes and servings; test rescheduling and distinguish planned meals from confirmed cooking |
+| L2 | Weekly planning — implemented | Migration 010, weekly schedule/servings/reschedule/cancel and atomic cooking linkage; calendar/scaling/isolation/rollback/concurrency checks pass |
 | L3 | Shared households | Membership/invitation authorization, roles, cache invalidation, and multi-user concurrency tests |
 | L4 | iOS release validation | Physical-device checks for picking PDFs, authentication, secure sessions, navigation, and both confirmations |
 

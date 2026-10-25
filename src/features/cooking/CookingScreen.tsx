@@ -1,5 +1,7 @@
+import { usePlannedMeal } from "../planner/api";
+import { scaleRecipe } from "../planner/domain";
 import { useEffect, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import { Decimal } from "decimal.js";
 import { useQueryClient } from "@tanstack/react-query";
@@ -48,12 +50,16 @@ function CookingEditor({
   recipe,
   suggestionId,
   recipeIndex,
+  planId,
+  planRevision,
   reload,
 }: {
   context: MealContext;
   recipe?: Recipe;
   suggestionId: string | null;
   recipeIndex: number | null;
+  planId: string | null;
+  planRevision: number | null;
   reload: () => Promise<void>;
 }) {
   const [ingredients, setIngredients] = useState<ActualIngredient[]>(() =>
@@ -119,6 +125,8 @@ function CookingEditor({
           : validateCooking(
               {
                 action: "cook",
+                plan_id: planId,
+                plan_revision: planRevision,
                 suggestion_id: suggestionId,
                 recipe_index: recipeIndex,
                 preference_revision: context.preferences.revision,
@@ -397,38 +405,97 @@ function CookingEditor({
   );
 }
 function Review() {
-  const { suggestion, index } = useLocalSearchParams<{
+  const router = useRouter();
+  const { suggestion, index, plan, manual } = useLocalSearchParams<{
     suggestion?: string;
     index?: string;
+    plan?: string;
+    manual?: string;
   }>();
   const context = useMealContext();
-  const saved = useCookingSuggestion(suggestion);
+  const saved = useCookingSuggestion(plan ? undefined : suggestion);
+  const planned = usePlannedMeal(plan);
   const [version, setVersion] = useState(0);
   const [error, setError] = useState("");
-  if (context.isPending || (suggestion && saved.isPending)) return <Loading />;
+  if (
+    context.isPending ||
+    (plan ? planned.isPending : suggestion && saved.isPending)
+  )
+    return <Loading />;
   if (context.isError) return <Problem message={messageOf(context.error)} />;
-  if (suggestion && saved.isError)
+  if (plan && planned.isError)
+    return <Problem message={messageOf(planned.error)} />;
+  if (!plan && suggestion && saved.isError)
     return <Problem message={messageOf(saved.error)} />;
-  const recipeIndex = suggestion ? Number(index) : null;
-  const recipe =
-    recipeIndex !== null ? saved.data?.recipes?.[recipeIndex] : undefined;
-  if (suggestion && (!recipe || saved.data?.status !== "completed"))
+  if (planned.data?.cancelled)
+    return (
+      <Problem message="This plan was cancelled. Restore it in Planner before cooking." />
+    );
+  if (planned.data?.cooking_id)
+    return (
+      <Card>
+        <Body>
+          This planned meal is cooked. Actual usage is recorded in cooking
+          history.
+        </Body>
+        <Button
+          title="View cooking history / recover pending confirmation"
+          onPress={() => router.push("/cooking")}
+        />
+      </Card>
+    );
+  const recipeIndex = plan
+    ? (planned.data?.recipe_index ?? null)
+    : suggestion
+      ? Number(index)
+      : null;
+  let recipe = plan
+    ? (planned.data?.recipe ?? undefined)
+    : recipeIndex !== null
+      ? saved.data?.recipes?.[recipeIndex]
+      : undefined;
+  if (plan && recipe && manual !== "1") {
+    try {
+      recipe = scaleRecipe(recipe, planned.data?.servings ?? recipe.servings);
+    } catch (e) {
+      return <Problem message={messageOf(e)} />;
+    }
+  }
+  if (manual === "1") recipe = undefined;
+  if (!plan && suggestion && (!recipe || saved.data?.status !== "completed"))
     return <Problem message="Recipe unavailable." />;
   return (
     <>
       {error && <Problem message={error} />}
+      {planned.data?.cooking_id && (
+        <Body>
+          This plan has already been cooked. Retrying returns the recorded
+          event; schedule another meal for a new cooking event.
+        </Body>
+      )}
       <CookingEditor
-        key={version}
+        key={`${plan ?? suggestion ?? "manual"}:${version}`}
         context={context.data}
         recipe={recipe}
-        suggestionId={suggestion ?? null}
+        suggestionId={
+          plan ? (planned.data?.suggestion_id ?? null) : (suggestion ?? null)
+        }
         recipeIndex={recipeIndex}
+        planId={plan ?? null}
+        planRevision={planned.data?.revision ?? null}
         reload={async () => {
           setError("");
           const r = await context.refetch();
           if (r.error) {
             setError(messageOf(r.error));
             return;
+          }
+          if (plan) {
+            const latest = await planned.refetch();
+            if (latest.error) {
+              setError(messageOf(latest.error));
+              return;
+            }
           }
           setVersion((v) => v + 1);
         }}

@@ -175,4 +175,9 @@ These do not block documentation; resolve them at the named milestone before cla
 
 ### PRD-L2: Weekly meal planning
 
-Authorized next: date/meal-slot scheduling with explicit servings, rescheduling and cancellation. A plan is not a stock reservation or a cooking confirmation; stock changes only through the existing cooking review transaction. Implementation decisions and evidence are tracked in the roadmap/status.
+- View Monday–Sunday weeks using calendar dates and the household timezone for today. Schedule manual meal notes or saved recipe snapshots into breakfast/lunch/dinner/snack slots; multiple dishes per slot are allowed.
+- Choose servings, edit/reschedule, cancel and restore uncooked plans. Use revision checks and persisted operation IDs for stale edits and interrupted responses.
+- A plan neither reserves nor consumes stock. Start actual cooking review explicitly; only the existing atomic transaction can link a cooking event and mark the plan cooked.
+- One planned meal can link to only one cooking event, even when concurrent callers submit different operation IDs. Another intentional cooking requires a new plan or standalone cooking event.
+- Scale saved recipe quantities exactly for planned servings. Fractional items or values needing more than six decimal places require explicit manual quantity decisions, never silent rounding.
+- Preserve cancelled/cooked history and isolate all plan and recipe references by household. Cooked plans are immutable; actual usage remains available in cooking history.

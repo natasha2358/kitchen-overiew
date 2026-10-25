@@ -165,13 +165,68 @@ export async function testConfirmationConcurrency(connectionString) {
       ).rows[0].quantity,
       "2.000000",
     );
+
+    const planId = randomUUID();
+    await rpc("select public.save_planned_meal($1,$2,$3) as r", [
+      household,
+      randomUUID(),
+      {
+        action: "plan_save",
+        id: planId,
+        revision: 0,
+        title: "Concurrent planned meal",
+        planned_on: "2026-10-26",
+        slot: "lunch",
+        servings: 1,
+        suggestion_id: null,
+        recipe_index: null,
+        cancelled: false,
+      },
+    ]);
+    const plannedCooking = {
+      ...cooking,
+      plan_id: planId,
+      plan_revision: 1,
+      ingredients: [
+        {
+          ...cooking.ingredients[0],
+          quantity: "1",
+          allocations: [{ batch_id: batch, revision: 3, quantity: "1" }],
+        },
+      ],
+    };
+    const plannedResults = await Promise.all([
+      rpc("select public.confirm_cooking($1,$2,$3) as r", [
+        household,
+        randomUUID(),
+        plannedCooking,
+      ]),
+      rpc("select public.confirm_cooking($1,$2,$3) as r", [
+        household,
+        randomUUID(),
+        plannedCooking,
+      ]),
+    ]);
+    assert.deepEqual(plannedResults[0], plannedResults[1]);
+    assert.equal(
+      (
+        await admin.query(
+          "select quantity::text from public.inventory_batches where id=$1",
+          [batch],
+        )
+      ).rows[0].quantity,
+      "1.000000",
+    );
     console.log(
-      "PASS receipt single confirmation and concurrent cooking/retry protection",
+      "PASS receipt single confirmation and concurrent cooking/retry protection and single planned-meal cooking",
     );
   } finally {
     // Only random records created by this suite are removed; never reset a database.
     if (household)
       for (const table of [
+        "planned_meals",
+        "shopping_items",
+        "list_operations",
         "stock_movements",
         "cooking_confirmations",
         "inventory_operations",

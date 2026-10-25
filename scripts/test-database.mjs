@@ -9,6 +9,7 @@ import { testMeals } from "../tests/database/meals.mjs";
 import { testCooking } from "../tests/database/cooking.mjs";
 import { testConfirmationConcurrency } from "../tests/database/confirmation-concurrency.mjs";
 import { testShopping } from "../tests/database/shopping.mjs";
+import { testPlanner } from "../tests/database/planner.mjs";
 const db = new pg.Client({ connectionString: localBackend().DB_URL });
 await db.connect();
 try {
@@ -20,8 +21,9 @@ try {
   await testMeals(db, context);
   await testCooking(db, context);
   await testShopping(db, context);
+  await testPlanner(db, context);
   console.log(
-    "PASS household isolation, inventory transactions and rollback, receipt ownership, duplicate identity and protected review",
+    "PASS household isolation, inventory transactions and rollback, receipt ownership, duplicate identity, protected review, shopping isolation/shortages and planning/cooking linkage",
   );
 } finally {
   await db.query("rollback");
