@@ -28,7 +28,7 @@ export const handler = observe("parse-receipt", async (request) => {
     {
       code: "PARSING_NOT_CONFIGURED",
       error:
-        "Automatic extraction is not configured. You can review and enter lines manually. Real supermarket fixtures and an evaluated server-side parser/model are required before enabling extraction.",
+        "Automatic line interpretation is not enabled. You can review and enter lines manually. Embedded-text extraction has initial fixture coverage; model integration and quality evaluation are still required.",
     },
     501,
   );

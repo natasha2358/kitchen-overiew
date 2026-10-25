@@ -1,0 +1,62 @@
+{
+  "provenance": "Fictional reconstruction of observed layout patterns, not original purchase data or model output",
+  "pages": 2,
+  "route": "embedded_text",
+  "lines": [
+    {
+      "label": "GERVAIS HUETTENK",
+      "purchase_count": "2",
+      "stock_quantity": null,
+      "stock_unit": null,
+      "issue": "Package size absent; count is not grams"
+    },
+    {
+      "label": "BANANE BIO",
+      "stock_quantity": "750",
+      "stock_unit": "g",
+      "evidence": "0,750 kg"
+    },
+    {
+      "label": "MARONE",
+      "stock_quantity": "400",
+      "stock_unit": "g",
+      "evidence": "0,400 kg"
+    },
+    {
+      "label": "H-MILCH 3,5% LAK",
+      "purchase_count": "2",
+      "stock_quantity": null,
+      "stock_unit": null,
+      "issue": "Do not assume a one-litre carton"
+    },
+    {
+      "label": "COCA-COLA 0,85L",
+      "package_size": "850",
+      "package_unit": "ml",
+      "stock_quantity": null,
+      "issue": "Label states size; purchase count still needs confirmation"
+    },
+    {
+      "label": "PFAND 0,25 EURO",
+      "include": false,
+      "reason": "Deposit, not food"
+    },
+    {
+      "label": "GEFLUEGEL-WIENER",
+      "stock_quantity": null,
+      "stock_unit": null,
+      "issue": "No weight or count stated"
+    },
+    {
+      "label": "KUEHL.GILL. KALK",
+      "include": null,
+      "stock_quantity": null,
+      "issue": "Ambiguous/non-food label; explicit review required"
+    },
+    {
+      "label": "BONUS RABATT",
+      "include": false,
+      "reason": "Discount, not stock"
+    }
+  ]
+}

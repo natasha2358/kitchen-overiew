@@ -69,7 +69,7 @@ As an owner, I want to see where groceries are stored and which to use first.
 As an owner, I want to select a receipt PDF from my phone and receive a draft of its grocery lines.
 
 - Cancelling the document picker creates no stock. The UI distinguishes uploading, processing, ready for review, and failed states, with a retry action for recoverable failures.
-- Check file type, actual file content, and configured size limits server-side. Invalid, unreadable, encrypted, or over-limit PDFs fail before confirmation.
+- Check file type, actual file content, and configured size limits server-side. Invalid, unreadable, opening-password-protected, or over-limit PDFs fail before confirmation. Readable PDFs with owner/editing restrictions are accepted when no opening password is required.
 - Prefer extracting embedded text server-side from digital PDFs where practical, then use AI to interpret and normalize receipt lines. Fixtures with usable embedded text must demonstrate this route without sending the PDF for vision processing.
 - Scanned or image-only fixtures, or fixtures with unusable/incomplete embedded text, exercise PDF vision fallback. Both routes produce the same reviewable draft and validation behavior; a failed fallback leaves inventory unchanged. Record the selected route and fallback reason without logging receipt contents.
 - Choose the parser and text-usability/fallback checks from real fixture results before claiming support. This is a preferred approach, not a promise that every digital PDF can use the text route.

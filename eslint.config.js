@@ -5,6 +5,7 @@ module.exports = defineConfig([
   {
     ignores: [
       "dist/**",
+      ".cloud-edge/**",
       "supabase/functions/**",
       "src/shared/database.types.ts",
     ],

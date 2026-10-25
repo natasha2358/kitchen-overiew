@@ -24,10 +24,15 @@ jobs:
         with:
           version: 2.75.0
       - run: npm ci
-      - run: supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime
+      - run: supabase start -x studio,imgproxy,logflare,vector,supavisor,realtime,edge-runtime
       - run: npm run test:db
       - run: npm run test:auth
       - run: npm run check:edge
       - run: npm run test:edge
       - run: npm run test:handlers
+      - run: npm run cloud:edge:prepare
+      - run: npm run cloud:edge:start
+      - run: npm run test:edge:gateway
+      - run: npm run test:services
+      - run: npm run test:erasure
       - run: npm run db:types && git diff --exit-code -- src/shared/database.types.ts

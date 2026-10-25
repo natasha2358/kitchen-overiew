@@ -18,10 +18,14 @@
     "test:db": "node scripts/test-database.mjs",
     "db:types": "node scripts/generate-types.mjs",
     "test:services": "node scripts/test-services.mjs",
-    "test:edge": "deno test --allow-read --config supabase/functions/deno.json supabase/functions/_shared/pdf_test.ts supabase/functions/_shared/telemetry_test.ts",
-    "check:edge": "deno check --config supabase/functions/deno.json supabase/functions/verify-receipt/index.ts supabase/functions/parse-receipt/index.ts supabase/functions/delete-receipt-source/index.ts supabase/functions/suggest-meals/index.ts supabase/functions/erase-account/index.ts",
+    "test:edge": "deno test --allow-read --config supabase/functions/deno.json supabase/functions/_shared/pdf_test.ts supabase/functions/_shared/telemetry_test.ts supabase/functions/_shared/receipt-text_test.ts",
+    "check:edge": "deno check --config supabase/functions/deno.json supabase/functions/verify-receipt/index.ts supabase/functions/parse-receipt/index.ts supabase/functions/delete-receipt-source/index.ts supabase/functions/suggest-meals/index.ts supabase/functions/erase-account/index.ts supabase/functions/_shared/receipt-text.ts",
     "test:auth": "node scripts/test-auth.mjs",
-    "test:handlers": "node scripts/test-handlers.mjs"
+    "test:handlers": "node scripts/test-handlers.mjs",
+    "cloud:edge:prepare": "node scripts/prepare-cloud-edge.mjs",
+    "cloud:edge:start": "node scripts/start-cloud-edge.mjs",
+    "test:edge:gateway": "node scripts/test-edge-gateway.mjs",
+    "test:erasure": "node scripts/test-erasure.mjs"
   },
   "dependencies": {
     "@react-native-community/netinfo": "12.0.1",
@@ -51,14 +55,17 @@
     "@types/pg": "8.23.1",
     "@types/react": "~19.3.0",
     "deno": "2.9.6",
+    "esbuild": "0.28.2",
     "eslint": "9.39.5",
     "eslint-config-expo": "~58.0.4",
     "jest": "30.5.2",
     "jest-expo": "~58.0.12",
+    "jose": "4.13.1",
     "pdf-lib": "1.17.1",
     "pg": "8.23.1",
     "prettier": "3.9.10",
     "tsx": "4.23.15",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "unpdf": "1.9.1"
   }
 }

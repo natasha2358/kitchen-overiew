@@ -8,7 +8,7 @@ Status: **not release-ready**. This is a measured checkpoint, not permission to 
 - Real PostgreSQL household isolation, inventory transactions/rollback, receipt ownership/confirmation/semantic duplicates, preference leases, cooking splits and concurrent confirmation suites passed.
 - Auth signup, unverified denial, real Mailpit confirmation, password recovery/change and logout passed after correcting the harness to accept Supabase's HTTP 303 redirect (as well as 302).
 - PDF/proposal Edge tests passed; new telemetry coverage checks that request payloads and exception details never enter responses/logs.
-- Storage/Edge integration failed at the first Edge ownership check: expected 404, received 500. The Edge container is not running because container DNS cannot resolve dependencies (`EAI_AGAIN` for deno.land). This is unresolved, not a passing authorization test.
+- Earlier Edge integration failed because dependencies were unreachable. Superseded by the cloud compatibility checkpoint below: real runtime service and erasure tests now pass.
 
 ## Operational visibility
 
@@ -18,7 +18,7 @@ Each Edge handler emits fixed function name, status, outcome and elapsed millise
 
 | Gate | Required evidence |
 | --- | --- |
-| Edge networking / integration | Working local Docker networking; run test:services and cover source deletion/replacement and generation refusal/lease recovery |
+| Deployed Edge integration | Cloud runtime upload/deletion/erasure and JWT denial tests pass; validate the eventual hosted configuration and complete model refusal/lease orchestration tests |
 | Real receipt coverage | Sanitized supermarket text/scanned fixtures, implemented extraction, field/line quality, latency and cost results; current parser is a configuration boundary |
 | Meal model selection | Configure server-only key/model, explicitly authorize paid evaluation, record supported model and prompt evidence |
 | Android acceptance | Physical device, OS/app/build version, font scaling and TalkBack, sign-in/PKCE recovery, PDF picker/cancel, upload/review/confirmation, retries/offline, meal assumptions, cooking and history |
@@ -48,6 +48,14 @@ Local erasure tests passed against real PostgreSQL, Auth and Storage: password v
 
 `test:handlers` exercises real function handlers on a loopback Deno server with local backend credentials and no OpenAI configuration. It also verifies private uploads, ownership, canonical hashing, source deletion/replacement and the parsing/model configuration boundaries. CI now includes this command. These results do not establish Supabase gateway or deployment behavior.
 
-The actual Edge runtime still cannot bootstrap: direct container DNS failed, and a proxy-configured retry failed its tunnel; the dependency host deno.land returned HTTP 403 through the environment proxy. No authentication, TLS or RLS checks were disabled. Run `test:services` through the actual runtime in a working environment before release. Real parsing, paid model evaluation, physical Android, native artifact and staging evidence remain missing.
+At the preceding checkpoint, the unmodified Edge runtime could not bootstrap: direct container DNS failed, and a proxy-configured retry failed its tunnel; the dependency host deno.land returned HTTP 403 through the environment proxy. No authentication, TLS or RLS checks were disabled. Run `test:services` through the actual runtime in a working environment before release. Real parsing, paid model evaluation, physical Android, native artifact and staging evidence remain missing.
 
 Final checks for this checkpoint: lint/typecheck and 48 Jest tests in 11 suites passed; all four Edge tests and Edge compilation passed; database and handler integration suites passed; Android Hermes/web exports passed. Native interaction, APK and remote CI outcomes are unverified.
+
+## Cloud workaround and REWE sample — 2026-10-25
+
+The real runtime now starts without downloading dependencies inside Docker. Official bootstrap/std sources are checksum-verified and bundled on the host. A local compatibility patch verifies Auth-issued ES256 signatures via its trusted JWKS; all function JWT and handler authentication checks remain active. Cloud tests pass through Kong and real Edge workers, including foreign-household denial, uploads, protected PDF validation, hash identity, source deletion/replacement and account erasure failure recovery. Forged HS256/ES256, unsigned, malformed and expired tokens are rejected before handler execution. This supersedes the earlier cloud runtime blocker, not the hosted deployment gate.
+
+The private two-page REWE sample has readable embedded text: all 33 priced source labels were preserved. Fictional reconstructed fixtures cover readable owner-protected versus opening-password-protected PDFs. Eight Edge tests pass, including routing and protected PDF regressions; no model interpretation or scanned receipt accuracy is claimed. Automatic parsing still returns 501.
+
+You do not need Docker locally for these checks. Physical Android still requires a device and reachable development/staging backend; no public tunnel, external project or deployment was created. CI now runs the cloud setup and real runtime checks; remote CI outcome has not been observed.

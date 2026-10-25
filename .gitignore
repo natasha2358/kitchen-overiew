@@ -10,3 +10,5 @@ supabase/.temp/
 supabase/.branches/
 android/
 ios/
+
+.cloud-edge/

@@ -55,7 +55,7 @@ Deliver in small increments:
 - Shared validated draft contracts, route/reason metadata, bounded retry/fallback budget, and status recovery for both routes.
 - Source-versus-normalized review UI with editable lines, product matches, locations, optional expiry, and revision-protected draft saves.
 
-Verify: Android document picker/cancel; usable-text fixtures taking the text route without PDF vision; scanned/empty/garbled/incomplete-text fixtures taking fallback; both routes producing the same reviewable contract; exhausted shared call/time budget; confirmed aliases proposed without automatic ambiguous merges; unsupported/encrypted/oversize PDFs; Storage isolation; missing and ambiguous quantities; malformed/refused/incomplete AI responses; timeouts, expired processing leases, and late completions; preserved edits after reopening; duplicate uploads resolving to the same draft.
+Verify: Android document picker/cancel; usable-text fixtures taking the text route without PDF vision; scanned/empty/garbled/incomplete-text fixtures taking fallback; both routes producing the same reviewable contract; exhausted shared call/time budget; confirmed aliases proposed without automatic ambiguous merges; unsupported/opening-password-protected/oversize PDFs; Storage isolation; missing and ambiguous quantities; malformed/refused/incomplete AI responses; timeouts, expired processing leases, and late completions; preserved edits after reopening; duplicate uploads resolving to the same draft.
 
 Exit: supported fixtures become reviewable drafts with correct or flagged grocery lines; inventory is unchanged by every upload/extraction/review path. Each fixture has a recorded route and fallback reason if applicable. Actual line/field quality, latency, and cost measurements support the stated format coverage and chosen routing rules; do not lock the approach before this evidence exists.
 
@@ -106,7 +106,7 @@ Exit: cooking changes stock only after explicit confirmation, never goes negativ
 
 ## M8: Android MVP validation and release readiness
 
-Checkpoint: account erasure is implemented with local database concurrency and real Auth/Storage handler evidence. Automated client/database/Auth checks passed; actual Edge runtime networking and other release gates remain open. See [Release readiness](RELEASE_READINESS.md).
+Checkpoint: account erasure is implemented with local database concurrency and real Auth/Storage handler evidence. Automated client/database/Auth checks passed; real cloud Edge integration now passes with a documented compatibility bootstrap; deployed-runtime and other release gates remain open. See [Release readiness](RELEASE_READINESS.md).
 
 Dependencies: M1-M7. Requirements: PRD-01 through PRD-09.
 
@@ -144,3 +144,5 @@ Automatic Gmail integration, offline editing, and wider receipt coverage remain 
 | Android acceptance | Text/fallback receipt selection -> review -> confirmation -> duplicate attempt -> staple-aware suggestion -> cooking -> verified finite balances | M8 |
 
 Routine CI must not depend on paid live AI calls. Run explicit live evaluations when selecting/changing a model or prompt and before claiming receipt support. Report tests actually executed, skipped checks, and known limitations at each milestone.
+
+M4 follow-through (2026-10-25): one private German REWE eBon supplied; fictional layout/protection regressions added. Initial embedded-text extraction preserves all priced source labels in this sample. Automatic interpretation, lease/retry orchestration, scanned fixtures and measured AI quality remain open. M8 cloud runtime networking is unblocked by locally bundled dependencies and ES256 verification, with real gateway and service checks passing; this is not hosted deployment/device evidence.

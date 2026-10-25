@@ -171,6 +171,32 @@ try {
     verifiedRace[1].id,
     "concurrent identical uploads share one canonical receipt",
   );
+  for (const [filename, status] of [
+    ["rewe-style-readable-protected.pdf", 200],
+    ["password-required.pdf", 422],
+  ]) {
+    const protectedReceipt = ok(
+      await a.rpc("prepare_receipt", {
+        p_household: h,
+        p_operation: randomUUID(),
+        p_filename: filename,
+      }),
+    );
+    paths.push(protectedReceipt.object_path);
+    ok(
+      await a.storage
+        .from("receipts")
+        .upload(
+          protectedReceipt.object_path,
+          await readFile(
+            new URL(`../tests/fixtures/receipts/${filename}`, import.meta.url),
+          ),
+          { contentType: "application/pdf" },
+        ),
+    );
+    const result = await edge("verify-receipt", aToken, protectedReceipt.id);
+    assert.equal(result.status, status, `${filename}: ${await result.text()}`);
+  }
   const malformed = ok(
     await a.rpc("prepare_receipt", {
       p_household: h,

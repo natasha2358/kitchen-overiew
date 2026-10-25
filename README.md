@@ -61,7 +61,7 @@ Local email rate limits are raised to 100/hour in `supabase/config.toml` for rep
 
 Run `supabase functions serve` in another terminal when using receipt uploads. All Edge Functions require JWT verification and perform their own user/ownership checks. The private `receipts` bucket is created by migration. No OpenAI credential is needed for upload verification or manual review.
 
-`parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Automatic extraction is intentionally not wired to a model: real supermarket fixtures and a measured parser/model choice are missing. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Saved manual reviews can now be confirmed into stock, with duplicate warnings and retry protection. Source PDF deletion preserves confirmation history. Database confirmation and retry tests pass; full Edge/device flows remain unverified. Meal generation is available behind the configuration below. Shopping and planning are available as described below.
+`parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Embedded-text extraction now has initial REWE-style fixture coverage, but automatic line interpretation, model orchestration and quality evaluation remain unfinished. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Saved manual reviews can now be confirmed into stock, with duplicate warnings and retry protection. Source PDF deletion preserves confirmation history. Database confirmation/retry and real cloud Edge upload/deletion tests pass; physical-device flows remain unverified. Meal generation is available behind the configuration below. Shopping and planning are available as described below.
 
 Additional checks:
 
@@ -73,7 +73,25 @@ npm run test:services   # Auth, private Storage and actual Edge runtime integrat
 npm run test:handlers   # real handlers with local Auth/Storage; no Edge bootstrap
 ```
 
-The cloud instance now runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–013 applied. Edge runtime cannot resolve `deno.land` inside its container and is excluded from the running stack. The cloud-only startup command adds `,edge-runtime` to the exclusion list above; receipt verification cannot work with that exclusion. Use Docker Desktop/overlay2 with working container DNS for the complete workflow. Full Edge integration and device validation remain pending. Read `docs/IMPLEMENTATION_STATUS.md` before treating any unrun check as verified.
+The cloud instance runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–013 applied. The real Edge Runtime now runs through the cloud compatibility setup below. You do not need Docker on your own computer for development or backend verification here. Physical Android testing still needs a device and a reachable test backend.
+
+### Cloud Edge workaround (maintainer commands)
+
+The pinned CLI bootstrap downloads blocked dependencies and only understands HS256 while local Auth issues ES256. We bundle checksum-pinned official bootstrap/std sources and npm dependencies on the host, add ES256 verification against local Auth's JWKS, and run the actual Supabase Edge Runtime 1.70.0. JWT validation and each handler's Auth checks remain enabled. Internal Auth/API traffic stays on the Docker network; external network policy is unchanged. No public tunnel or production deployment is created.
+
+Start the existing backend with `edge-runtime` added to the exclusion list, then:
+
+```sh
+npm run cloud:edge:prepare
+npm run cloud:edge:start
+npm run test:edge:gateway
+npm run test:services
+npm run test:erasure
+```
+
+In this workspace prepend `SUPABASE_BIN=/workspace/tools/supabase` to commands that use the CLI, and `DENO_DIR=/workspace/.deno-cache` to Deno checks. This setup is specific to project `kitchen-overiew`. The runtime is named `kitchen_cloud_edge`; after rebundling, use `docker restart kitchen_cloud_edge`. Do not run ordinary `supabase functions serve` simultaneously: it would compete for the gateway's runtime address. To remove only this development runtime, run `docker rm -f kitchen_cloud_edge`; database/storage volumes are unaffected. Generated `.cloud-edge/` bundles are ignored by Git.
+
+The sample REWE eBon is readable but owner-protected. Validation now accepts PDFs that open without a password and rejects those requiring an opening password. Only fictional reconstructed fixtures are committed. Text extraction preserved all 33 priced labels in the private sample; this is not evidence of automatic grocery interpretation.
 
 ## Meal suggestions
 
@@ -101,4 +119,4 @@ Choose **Review actual cooking usage** when you actually cook. Review the batch 
 
 Apply migrations through 013 and serve Edge Functions. Open **Account settings**, enter the current password and type **DELETE MY ACCOUNT**. This permanently deletes the sole owner's private PDFs, household data and Auth account. Preparation freezes the kitchen; interrupted deletion must be resumed from Account, signing in again if needed. Pending drafts on the requesting device are cleared before server deletion.
 
-Local disposable-account integration and concurrency tests pass. Native UI and deployed runtime validation remain open. The cloud can run `test:handlers` despite blocked Edge bootstrap dependency networking; that harness is test-only and is not a replacement runtime for the app. See [release readiness](docs/RELEASE_READINESS.md).
+Local disposable-account integration and concurrency tests pass. Native UI and deployed runtime validation remain open. The cloud runs both handler tests and real runtime integration through the compatibility setup above. See [release readiness](docs/RELEASE_READINESS.md).

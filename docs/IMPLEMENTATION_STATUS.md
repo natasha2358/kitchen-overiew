@@ -187,3 +187,35 @@ A preliminary concurrency assertion incorrectly expected a new shared lock to fa
 Actual Supabase Edge startup remains blocked: container DNS failed; a proxy-enabled retry failed its tunnel and deno.land returned HTTP 403 through the environment proxy. No JWT/TLS/RLS protections were bypassed. Thus `test:services` through the actual runtime is still an open gate despite passing handler tests.
 
 Next: run the actual runtime and native account/receipt journey in a working Docker/device environment; supply sanitized representative supermarket fixtures to implement and measure extraction (currently explicit 501); configure and separately authorize model quality evaluation; rehearse staging migrations and native builds before any release. M8 remains incomplete. See RELEASE_READINESS.md for the full evidence matrix and README for Android setup.
+
+## Cloud Docker workaround and first REWE sample (2026-10-25)
+
+The user cannot run Docker locally. Backend work now runs entirely in this cloud workspace; no user-side Docker setup, hosted project, public tunnel or paid infrastructure was required.
+
+### Runtime blocker resolved for cloud verification
+
+Added `cloud:edge:prepare` and `cloud:edge:start`. Host-side bundling uses official CLI 2.75.0 bootstrap and std 0.224.0 source files pinned by SHA-256 in `scripts/cloud-edge-sources.json`, plus locked npm dependencies. Real Edge Runtime 1.70.0 executes the resulting application entrypoints behind the existing Kong gateway. Bundles are ignored, contain no keys and mount read-only; local runtime keys are transferred through a temporary mode-0600 environment file removed after startup.
+
+Initial runtime startup succeeded, but service tests exposed a separate 401: the old bootstrap only accepts HMAC while Auth issues ES256. The development compatibility patch retains signature verification, allows only HS256/ES256, verifies ES256 against trusted local Auth JWKS with the authenticated audience, and keeps all handler Auth checks. A further failure revealed injected proxy defaults overriding supplied NO_PROXY settings; the runtime process now adds only internal Docker aliases to exclusions. JWT errors log a fixed message without token claims. Nothing disables RLS, TLS or authentication.
+
+Final real gateway tests reject malformed/unsigned/expired/forged HMAC and forged ES256 tokens. `test:services` and `test:erasure` now pass through the actual runtime, including foreign-household denials, canonical uploads, private source deletion/replacement, frozen-account handling and injected Storage deletion failure recovery. CI is configured to reproduce this setup; remote CI outcome is unverified. This closes the cloud runtime blocker, not hosted deployment/native acceptance.
+
+### Receipt sample and validator correction
+
+The supplied two-page German REWE eBon has embedded text and password-free owner protection with copying permitted. The old pdf-lib validator wrongly rejected it as encrypted. `unpdf` 1.9.1 / PDF.js 6.4.299 now handles structural validation and initial text extraction. Files that actually require an opening password still fail. Existing 10 MiB/10-page limits remain; rendering/WASM are disabled and no PDF instructions are executed. Official package API documentation was read from its npm README.
+
+A private local extraction probe preserved all 33 priced source labels across both pages. This is text coverage, not grocery interpretation or model accuracy. The original receipt and its payment/loyalty/fiscal data remain outside Git. Newly generated fictional PDFs and expected annotations exercise weighted quantities, repeated purchase counts, missing package sizes, deposits/discounts, ambiguous labels and protected-PDF behavior. Fixture creation never reads the original.
+
+The helper explicitly marks sparse, garbled, partly blank, excessive or absent text as needing vision; no vision/model call is made. Unknown quantities and package sizes remain unknown. `parse-receipt` still returns 501: model interpretation, leases/retries and persisted draft integration remain open. One digital sample is not universal REWE/scanned-receipt support.
+
+### Verification
+
+- `npm run check`: lint, TypeScript and 48 client tests passed.
+- `npm run check:edge` and `npm run test:edge`: compilation and all eight tests passed, including four new extraction/protection tests.
+- `npm run cloud:edge:prepare` and `npm run cloud:edge:start`: real runtime started with locally bundled dependencies and active JWT validation.
+- `npm run test:edge:gateway`, `npm run test:services`, `npm run test:erasure`: passed through Kong and real Edge workers, including readable protected-PDF acceptance and opening-password rejection.
+- `npm run test:handlers`: independent host-handler tests also passed against real Auth/Storage.
+- Private original-sample extraction: 2 pages, 33/33 priced labels preserved; no original text is committed.
+- `git diff --check` passed. No database schema/client UI changed; previous database concurrency and Android/web export evidence is unchanged, not newly rerun.
+
+Next implementation work: receipt model/vision orchestration and editable draft persistence with bounded calls, revision/lease protection and mocked model tests. Real model quality/cost evaluation still needs server configuration and explicit paid-call authorization. Physical Android validation needs a reachable test backend; this workspace has not been exposed publicly. L3 sharing remains deferred.
