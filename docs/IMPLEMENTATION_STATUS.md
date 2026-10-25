@@ -1,5 +1,7 @@
 # Implementation status
 
+Current checkpoint: receipt model integration, proposal review and bounded recovery are implemented and tested with mocked providers in real cloud Edge workers. Live model quality, scanned fixtures and physical Android validation remain open. See the final section for current evidence; earlier milestone sections are historical.
+
 Branch: `feat/smart-kitchen-foundation`, pushed to GitHub at the user’s request. No merge, app publication, production deployment, paid infrastructure, or external account modification was performed.
 
 **Automated testing resumed at the user's request on 2026-10-24.** The original four milestones and M5–M7 implementation are present. Runtime verification of authentication, inventory, and receipt flows remains incomplete; do not treat implementation as a verified release.
@@ -219,3 +221,29 @@ The helper explicitly marks sparse, garbled, partly blank, excessive or absent t
 - `git diff --check` passed. No database schema/client UI changed; previous database concurrency and Android/web export evidence is unchanged, not newly rerun.
 
 Next implementation work: receipt model/vision orchestration and editable draft persistence with bounded calls, revision/lease protection and mocked model tests. Real model quality/cost evaluation still needs server configuration and explicit paid-call authorization. Physical Android validation needs a reachable test backend; this workspace has not been exposed publicly. L3 sharing remains deferred.
+
+## Receipt-to-draft integration (2026-10-25)
+
+Implemented the next MVP gap using the existing database and Edge Functions. Migrations 014–015 add service-only extraction claims, durable call reservations, two attempts/two calls per attempt, 60-second leases, household rate limiting, model/prompt/route metadata, source positions and transactional completion. Source hash is rechecked before processing. Review saves, source deletion/replacement, account erasure, stale revisions and expired attempts block late results. Completion never writes inventory and does not accept incomplete coverage. Types were generated from the local migrated schema.
+
+The OpenAI Responses integration sends embedded text first and supports opt-in inline PDF vision. A 45-second abort signal bounds Storage/model work; fallback and transient retries share the reserved budget. Refusal, malformed output and truncated envelopes fail explicitly. Streaming response size and output tokens are capped. Model output cannot nominate products, locations or expiry; decimal/whole-count validation checks quoted quantity evidence and package arithmetic. Prices alone are not quantities. The supplied REWE layout has a narrow source-order/line-count check independent of the model's claimed completeness.
+
+Receipt review now generates/retries proposals, exposes status and budgets, shows original proposed values/quantity evidence/package details/issues, suggests confirmed name/alias matches without automatically merging, and keeps unsaved edits intact. Locations remain unresolved until user review; stock still requires saving and explicit atomic confirmation. The upload disclosure now describes actual processing and confirmation behavior. No local draft key was added.
+
+Added `.env.server.example` with blank key/model values. Live configuration requires server-only `OPENAI_API_KEY` and `OPENAI_RECEIPT_MODEL`; PDF vision additionally requires `OPENAI_RECEIPT_VISION=true` and a compatible model. Cloud startup accepts an allowlisted ignored model environment file. Test-fixture startup rejects live model configuration. Nothing provisions credentials or paid infrastructure.
+
+### Verification and corrections
+
+- `npm run check`: lint, strict TypeScript and 51 tests in 12 suites passed, including dirty-edit protection, configuration failure/manual entry and unresolved AI review UI.
+- `npm run check:edge` and `npm run test:edge`: compilation and 17 tests passed. Coverage includes text/vision routing, shared retry/fallback limits, refusal, malformed/truncated/oversized responses, in-flight abort, unsupported/inferred quantities and missing/reordered REWE rows.
+- `npm run test:db`: real isolation/atomicity/concurrency suites passed, plus private RPC denial, proposal rollback/order, bounded reservations, expired attempts, preserved review/source deletion and frozen-household completion denial.
+- `npm run test:handlers`: mocked processing passed with real Auth, private Storage and PostgreSQL; existing service and account-erasure tests also passed.
+- `npm run test:receipt-processing` against the real Edge worker fixture route: concurrent requests created one draft, incomplete text fell back once, refusal persisted a safe failure, source tampering consumed no model call, rate limits denied excess receipts, late output preserved edits, and explicit reviewed confirmation created stock once.
+- Android Hermes/web export passed with documented cloud cache/offline settings. This is not an APK or device result.
+- First type-generation attempt used the blocked ECR default; rerunning with `SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io` succeeded. Deno compilation required the named Decimal export; corrected before passing checks.
+
+The fixture model is explicitly injected in test-only modules, never selected by production requests. It was also bundled into a separate test-only Edge worker for runtime validation; normal startup omits that worker. No real model API call occurred and no live receipt interpretation quality is claimed. Official current Responses input-file/structured-output types were checked at https://github.com/openai/openai-node/blob/master/src/resources/responses/responses.ts .
+
+Remaining gates: choose/configure a model and explicitly authorize live quality/cost evaluation; acquire annotated scanned/other receipt formats; test physical Android including PDF selection and recovery; validate an authorized staging/hosted environment. The original uploaded receipt stays outside Git. No production deploy, main merge or publication was performed.
+
+Final runtime checks also passed for JWT denial, real service integration and account erasure on normal startup. The fixture worker was removed from active configuration and its URL returned HTTP 404. The blank server environment template was exercised without credentials or model calls. `git diff --check` passed. CI was updated for the same mocked worker flow; remote CI outcome has not been observed.

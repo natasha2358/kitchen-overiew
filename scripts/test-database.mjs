@@ -12,6 +12,7 @@ import { testShopping } from "../tests/database/shopping.mjs";
 import { testPlanner } from "../tests/database/planner.mjs";
 import { testErasure } from "../tests/database/erasure.mjs";
 import { testErasureConcurrency } from "../tests/database/erasure-concurrency.mjs";
+import { testExtraction } from "../tests/database/extraction.mjs";
 const db = new pg.Client({ connectionString: localBackend().DB_URL });
 await db.connect();
 try {
@@ -24,6 +25,7 @@ try {
   await testCooking(db, context);
   await testShopping(db, context);
   await testPlanner(db, context);
+  await testExtraction(db, context);
   await testErasure(db, context);
   console.log(
     "PASS household isolation, inventory transactions and rollback, receipt ownership, duplicate identity, protected review, shopping isolation/shortages and planning/cooking linkage",

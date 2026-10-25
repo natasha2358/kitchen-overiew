@@ -19,7 +19,7 @@ Each Edge handler emits fixed function name, status, outcome and elapsed millise
 | Gate | Required evidence |
 | --- | --- |
 | Deployed Edge integration | Cloud runtime upload/deletion/erasure and JWT denial tests pass; validate the eventual hosted configuration and complete model refusal/lease orchestration tests |
-| Real receipt coverage | Sanitized supermarket text/scanned fixtures, implemented extraction, field/line quality, latency and cost results; current parser is a configuration boundary |
+| Real receipt coverage | Sanitized supermarket text/scanned fixtures, implemented extraction, field/line quality, latency and cost results; integration is implemented; live model quality is not evaluated |
 | Meal model selection | Configure server-only key/model, explicitly authorize paid evaluation, record supported model and prompt evidence |
 | Android acceptance | Physical device, OS/app/build version, font scaling and TalkBack, sign-in/PKCE recovery, PDF picker/cancel, upload/review/confirmation, retries/offline, meal assumptions, cooking and history |
 | Account erasure rollout | Implemented and tested locally with disposable accounts; verify native UI and deployed Edge runtime, including operator reconciliation |
@@ -56,6 +56,14 @@ Final checks for this checkpoint: lint/typecheck and 48 Jest tests in 11 suites 
 
 The real runtime now starts without downloading dependencies inside Docker. Official bootstrap/std sources are checksum-verified and bundled on the host. A local compatibility patch verifies Auth-issued ES256 signatures via its trusted JWKS; all function JWT and handler authentication checks remain active. Cloud tests pass through Kong and real Edge workers, including foreign-household denial, uploads, protected PDF validation, hash identity, source deletion/replacement and account erasure failure recovery. Forged HS256/ES256, unsigned, malformed and expired tokens are rejected before handler execution. This supersedes the earlier cloud runtime blocker, not the hosted deployment gate.
 
-The private two-page REWE sample has readable embedded text: all 33 priced source labels were preserved. Fictional reconstructed fixtures cover readable owner-protected versus opening-password-protected PDFs. Eight Edge tests pass, including routing and protected PDF regressions; no model interpretation or scanned receipt accuracy is claimed. Automatic parsing still returns 501.
+The private two-page REWE sample has readable embedded text: all 33 priced source labels were preserved. Fictional reconstructed fixtures cover readable owner-protected versus opening-password-protected PDFs. Eight Edge tests pass, including routing and protected PDF regressions; no model interpretation or scanned receipt accuracy is claimed. At that checkpoint automatic parsing still returned 501; the integration below supersedes that implementation boundary.
 
 You do not need Docker locally for these checks. Physical Android still requires a device and reachable development/staging backend; no public tunnel, external project or deployment was created. CI now runs the cloud setup and real runtime checks; remote CI outcome has not been observed.
+
+## Receipt-to-draft integration checkpoint
+
+Migrations 014–015 implement two attempts/two reserved calls per attempt, active leases and revision/source/erasure guards. The model integration supports structured text proposals and opt-in inline PDF vision, with bounded transient retries and explicit refusal/incomplete/invalid-result failures. It is enabled only by server key/model configuration. The UI shows proposal evidence and unresolved quantities, keeps dirty edits safe and requires reviewed stock confirmation.
+
+Evidence: 51 client tests in 12 suites, lint and TypeScript passed; 17 Edge tests and compilation passed; real database isolation/rollback/lease/call-budget tests passed. The mocked full flow also passed in real Edge workers behind Kong, including concurrent requests, fallback/refusal, source-hash mismatch, rate limiting, preserved edits, manual confirmation and unchanged stock before confirmation. Android Hermes/web exports passed. Fixture routes are test-only and normal startup excludes them.
+
+No paid model call or real-model extraction accuracy evaluation occurred. No physical Android, native APK, hosted deployment or staging evidence was added. Original receipt data remains outside Git. A chosen/configured model and explicitly authorized live evaluation are the next quality gate; mock output is never evidence of model quality.

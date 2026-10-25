@@ -1,0 +1,134 @@
+{
+  "coverage_complete": true,
+  "metadata": {
+    "merchant": "REWE TEST MARKET",
+    "receipt_number": null,
+    "purchased_on": null,
+    "total": "16.95",
+    "currency": "EUR"
+  },
+  "lines": [
+    {
+      "source_label": "GERVAIS HUETTENK",
+      "proposed_name": "GERVAIS HUETTENK",
+      "kind": "grocery",
+      "quantity": null,
+      "unit": null,
+      "quantity_evidence": null,
+      "purchase_count": "2",
+      "package_quantity": null,
+      "package_unit": null,
+      "issues": [
+        "Package size absent; count is not grams"
+      ]
+    },
+    {
+      "source_label": "BANANE BIO",
+      "proposed_name": "BANANE BIO",
+      "kind": "grocery",
+      "quantity": "750",
+      "unit": "g",
+      "quantity_evidence": "0,750 kg",
+      "purchase_count": null,
+      "package_quantity": null,
+      "package_unit": null,
+      "issues": []
+    },
+    {
+      "source_label": "MARONE",
+      "proposed_name": "MARONE",
+      "kind": "grocery",
+      "quantity": "400",
+      "unit": "g",
+      "quantity_evidence": "0,400 kg",
+      "purchase_count": null,
+      "package_quantity": null,
+      "package_unit": null,
+      "issues": []
+    },
+    {
+      "source_label": "H-MILCH 3,5% LAK",
+      "proposed_name": "H-MILCH 3,5% LAK",
+      "kind": "grocery",
+      "quantity": null,
+      "unit": null,
+      "quantity_evidence": null,
+      "purchase_count": "2",
+      "package_quantity": null,
+      "package_unit": null,
+      "issues": [
+        "Do not assume a one-litre carton"
+      ]
+    },
+    {
+      "source_label": "COCA-COLA 0,85L",
+      "proposed_name": "COCA-COLA 0,85L",
+      "kind": "grocery",
+      "quantity": null,
+      "unit": null,
+      "quantity_evidence": null,
+      "purchase_count": null,
+      "package_quantity": "850",
+      "package_unit": "ml",
+      "issues": [
+        "Label states size; purchase count still needs confirmation"
+      ]
+    },
+    {
+      "source_label": "PFAND 0,25 EURO",
+      "proposed_name": null,
+      "kind": "deposit",
+      "quantity": null,
+      "unit": null,
+      "quantity_evidence": null,
+      "purchase_count": null,
+      "package_quantity": null,
+      "package_unit": null,
+      "issues": [
+        "Deposit, not food"
+      ]
+    },
+    {
+      "source_label": "GEFLUEGEL-WIENER",
+      "proposed_name": "GEFLUEGEL-WIENER",
+      "kind": "grocery",
+      "quantity": null,
+      "unit": null,
+      "quantity_evidence": null,
+      "purchase_count": null,
+      "package_quantity": null,
+      "package_unit": null,
+      "issues": [
+        "No weight or count stated"
+      ]
+    },
+    {
+      "source_label": "KUEHL.GILL. KALK",
+      "proposed_name": null,
+      "kind": "unknown",
+      "quantity": null,
+      "unit": null,
+      "quantity_evidence": null,
+      "purchase_count": null,
+      "package_quantity": null,
+      "package_unit": null,
+      "issues": [
+        "Ambiguous/non-food label; explicit review required"
+      ]
+    },
+    {
+      "source_label": "BONUS RABATT",
+      "proposed_name": null,
+      "kind": "discount",
+      "quantity": null,
+      "unit": null,
+      "quantity_evidence": null,
+      "purchase_count": null,
+      "package_quantity": null,
+      "package_unit": null,
+      "issues": [
+        "Discount, not stock"
+      ]
+    }
+  ]
+}

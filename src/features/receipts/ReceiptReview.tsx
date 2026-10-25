@@ -19,14 +19,58 @@ import { AuthGate } from "../auth/AuthGate";
 import { useAuth } from "../auth/Providers";
 import { useHousehold } from "../auth/useHousehold";
 import { useLocations, useProducts } from "../inventory/api";
-import { useReceipt, verifyReceipt } from "./api";
+import { matchProducts } from "../inventory/quantity";
+import { useReceipt, verifyReceipt, parseReceipt } from "./api";
 import {
   ReceiptLine,
   receiptLineSchema,
   receiptReviewSchema,
   reviewIssues,
 } from "../../../supabase/functions/_shared/contracts";
-function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
+function ProposalDetails({ proposed }: { proposed: unknown }) {
+  const parsed = z
+    .object({
+      proposed_name: z.string().nullable(),
+      quantity: z.string().nullable(),
+      unit: z.string().nullable(),
+      issues: z.array(z.string()),
+      quantity_evidence: z.string().nullable().optional(),
+      purchase_count: z.string().nullable().optional(),
+      package_quantity: z.string().nullable().optional(),
+      package_unit: z.string().nullable().optional(),
+    })
+    .safeParse(proposed);
+  if (!parsed.success) return null;
+  return (
+    <>
+      <Body>
+        AI proposed: {parsed.data.proposed_name ?? "Unresolved product"};{" "}
+        {parsed.data.quantity ?? "Unknown quantity"} {parsed.data.unit ?? ""}
+      </Body>
+      {parsed.data.quantity_evidence && (
+        <Body>Quantity source: {parsed.data.quantity_evidence}</Body>
+      )}
+      {parsed.data.purchase_count && (
+        <Body>Proposed purchase count: {parsed.data.purchase_count}</Body>
+      )}
+      {parsed.data.package_quantity && (
+        <Body>
+          Proposed package size: {parsed.data.package_quantity}{" "}
+          {parsed.data.package_unit}. Confirm the count and size before using a
+          total.
+        </Body>
+      )}
+      {parsed.data.issues.map((issue, index) => (
+        <Body key={index}>Review: {issue}</Body>
+      ))}
+    </>
+  );
+}
+export function ReceiptEditor({
+  receipt,
+}: {
+  receipt: z.infer<typeof receiptReviewSchema>;
+}) {
   const [lines, setLines] = useState<ReceiptLine[]>(receipt.lines);
   const [revision, setRevision] = useState(receipt.revision);
   const [metadata, setMetadata] = useState({
@@ -176,6 +220,33 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
       setBusy(false);
     }
   }
+  async function parse() {
+    setBusy(true);
+    setError("");
+    try {
+      if (!online || dirty)
+        throw new Error("Reconnect and save or discard local edits first.");
+      const result = await parseReceipt(receipt.id, revision);
+      if (result.status === "completed") {
+        await reload();
+        setNotice(
+          "AI draft loaded. Check every line, choose locations and save your review before confirming stock.",
+        );
+      } else {
+        setNotice(
+          "Receipt processing is active. Reload to check it; retry after its one-minute lease if interrupted.",
+        );
+      }
+    } catch (e) {
+      setError(messageOf(e));
+    } finally {
+      await client.invalidateQueries({
+        queryKey: ["receipt", h.data?.id, receipt.id],
+      });
+      await client.invalidateQueries({ queryKey: ["receipts", h.data?.id] });
+      setBusy(false);
+    }
+  }
   async function verify() {
     setBusy(true);
     setError("");
@@ -216,14 +287,51 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
       <Card>
         <Body>{receipt.filename}</Body>
         <Body>
-          Automatic extraction is not configured. This is a manual review draft;
-          no receipt parsing success is claimed.
+          AI proposals require your review. Missing quantities stay unresolved;
+          deposits and non-food lines are excluded proposals you can correct.
+          You can always enter lines manually.
         </Body>
         <Body>
           {dirty
             ? "Unsaved changes — keep this screen open until saved."
             : "Draft loaded. Saving never changes inventory."}
         </Body>
+        {receipt.extraction && (
+          <Body>
+            Processing: {receipt.extraction.status}; attempts{" "}
+            {receipt.extraction.attempts}/2.
+            {receipt.extraction.route
+              ? ` Route: ${receipt.extraction.route}.`
+              : ""}
+            {receipt.extraction.reason
+              ? ` Reason: ${receipt.extraction.reason}.`
+              : ""}
+            {receipt.extraction.error
+              ? ` Last result: ${receipt.extraction.error}.`
+              : ""}
+          </Body>
+        )}
+        {receipt.status === "uploaded" && !receipt.source_deleted && (
+          <>
+            <Body>
+              Generate a draft sends extracted receipt text to OpenAI. If
+              server-side vision is enabled, the PDF may also be sent when text
+              is unusable or incomplete. Each explicit attempt permits at most
+              two model calls.
+            </Body>
+            <Button
+              title={busy ? "Processing…" : "Generate / retry receipt draft"}
+              onPress={() => void parse()}
+              disabled={
+                busy ||
+                !online ||
+                dirty ||
+                (receipt.extraction?.attempts === 2 &&
+                  receipt.extraction.status !== "pending")
+              }
+            />
+          </>
+        )}
         {notice && <Body>{notice}</Body>}
         {error && <Problem message={error} />}
         {receipt.revision > revision && (
@@ -317,6 +425,17 @@ function Editor({ receipt }: { receipt: z.infer<typeof receiptReviewSchema> }) {
           {lines.map((line) => (
             <Card key={line.id}>
               <Body>Source: {line.source_label}</Body>
+              <ProposalDetails proposed={line.proposed} />
+              {matchProducts(line.source_label, products.data ?? []).length >
+                0 && (
+                <Body>
+                  Matching saved names/aliases:{" "}
+                  {matchProducts(line.source_label, products.data ?? [])
+                    .map((p) => p.name)
+                    .join(", ")}
+                  . Choose the correct product explicitly.
+                </Body>
+              )}
               <Field
                 label="Reviewed product name"
                 value={line.reviewed_name ?? ""}
@@ -464,7 +583,7 @@ function Review() {
   const receipt = useReceipt(id);
   if (receipt.isPending) return <Loading />;
   if (receipt.isError) return <Problem message={messageOf(receipt.error)} />;
-  return <Editor key={receipt.data.id} receipt={receipt.data} />;
+  return <ReceiptEditor key={receipt.data.id} receipt={receipt.data} />;
 }
 export function ReceiptReview() {
   return (

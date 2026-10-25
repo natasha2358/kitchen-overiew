@@ -75,6 +75,7 @@ As an owner, I want to select a receipt PDF from my phone and receive a draft of
 - Choose the parser and text-usability/fallback checks from real fixture results before claiming support. This is a preferred approach, not a promise that every digital PDF can use the text route.
 - Preserve extracted source labels alongside proposed normalized products, purchased quantities, units, package details, and available merchant/date/receipt identifiers.
 - Missing or ambiguous values are flagged for review. Discounts, totals, deposits, and non-grocery lines do not automatically become stock.
+- Initial processing permits two explicit attempts per receipt, with at most two provider calls per attempt shared by fallback and transient retries. Exhausted budgets leave manual review available.
 - Neither upload nor extraction changes inventory. A timeout, refusal, malformed AI result, or failed validation leaves stock unchanged.
 - Each claimed supported format has sanitized fixtures covering ordinary lines, weighted goods, multipacks, decimal formats, discounts, and ambiguous text where applicable. Record which digital/scanned variants and languages were validated.
 - On the fixture set, every expected grocery line is either represented correctly or explicitly flagged for correction; no silently omitted grocery lines are accepted. Do not promise universal extraction accuracy.

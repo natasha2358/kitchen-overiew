@@ -42,6 +42,17 @@ export const receiptReviewSchema = z.object({
   total: z.string().nullable(),
   currency: z.string().nullable(),
   source_deleted: z.boolean(),
+  extraction: z
+    .object({
+      status: z.enum(["idle", "pending", "completed", "failed"]),
+      attempts: z.number().int().min(0).max(2),
+      calls: z.number().int().min(0).max(2),
+      route: z.enum(["embedded_text", "vision"]).nullable(),
+      reason: z.string().nullable(),
+      error: z.string().nullable(),
+      lease_until: z.string().nullable(),
+    })
+    .optional(),
   confirmation: z
     .object({
       receipt_id: z.uuid(),

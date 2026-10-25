@@ -477,6 +477,19 @@ export type Database = {
           created_at: string
           currency: string | null
           deletion_token: string | null
+          extraction_attempt: string | null
+          extraction_attempts: number
+          extraction_calls: number
+          extraction_error: string | null
+          extraction_lease_until: string | null
+          extraction_metadata: Json | null
+          extraction_model: string | null
+          extraction_prompt: string | null
+          extraction_reason: string | null
+          extraction_revision: number | null
+          extraction_route: string | null
+          extraction_started_at: string | null
+          extraction_status: string
           filename: string
           household_id: string
           id: string
@@ -499,6 +512,19 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deletion_token?: string | null
+          extraction_attempt?: string | null
+          extraction_attempts?: number
+          extraction_calls?: number
+          extraction_error?: string | null
+          extraction_lease_until?: string | null
+          extraction_metadata?: Json | null
+          extraction_model?: string | null
+          extraction_prompt?: string | null
+          extraction_reason?: string | null
+          extraction_revision?: number | null
+          extraction_route?: string | null
+          extraction_started_at?: string | null
+          extraction_status?: string
           filename: string
           household_id: string
           id?: string
@@ -521,6 +547,19 @@ export type Database = {
           created_at?: string
           currency?: string | null
           deletion_token?: string | null
+          extraction_attempt?: string | null
+          extraction_attempts?: number
+          extraction_calls?: number
+          extraction_error?: string | null
+          extraction_lease_until?: string | null
+          extraction_metadata?: Json | null
+          extraction_model?: string | null
+          extraction_prompt?: string | null
+          extraction_reason?: string | null
+          extraction_revision?: number | null
+          extraction_route?: string | null
+          extraction_started_at?: string | null
+          extraction_status?: string
           filename?: string
           household_id?: string
           id?: string
@@ -567,6 +606,7 @@ export type Database = {
           receipt_id: string
           reviewed_name: string | null
           source_label: string
+          source_position: number | null
           unit: string | null
         }
         Insert: {
@@ -581,6 +621,7 @@ export type Database = {
           receipt_id: string
           reviewed_name?: string | null
           source_label: string
+          source_position?: number | null
           unit?: string | null
         }
         Update: {
@@ -595,6 +636,7 @@ export type Database = {
           receipt_id?: string
           reviewed_name?: string | null
           source_label?: string
+          source_position?: number | null
           unit?: string | null
         }
         Relationships: [
@@ -782,6 +824,16 @@ export type Database = {
         Returns: Json
       }
       begin_receipt_deletion: { Args: { p_receipt: string }; Returns: Json }
+      begin_receipt_extraction: {
+        Args: {
+          p_model: string
+          p_prompt: string
+          p_receipt: string
+          p_revision: number
+          p_user: string
+        }
+        Returns: Json
+      }
       bootstrap_household: { Args: { p_timezone?: string }; Returns: string }
       confirm_cooking: {
         Args: { p_household: string; p_operation: string; p_request: Json }
@@ -815,6 +867,16 @@ export type Database = {
         Args: { p_receipt: string; p_token: string; p_user: string }
         Returns: undefined
       }
+      finish_receipt_extraction: {
+        Args: {
+          p_attempt: string
+          p_error?: string
+          p_proposal: Json
+          p_receipt: string
+          p_user: string
+        }
+        Returns: boolean
+      }
       get_batch_history: {
         Args: { p_batch: string; p_household: string }
         Returns: Json
@@ -840,6 +902,16 @@ export type Database = {
       receipt_duplicate_candidates: {
         Args: { p_receipt: string }
         Returns: Json
+      }
+      reserve_receipt_model_call: {
+        Args: {
+          p_attempt: string
+          p_reason: string
+          p_receipt: string
+          p_route: string
+          p_user: string
+        }
+        Returns: number
       }
       save_food_preferences: {
         Args: {

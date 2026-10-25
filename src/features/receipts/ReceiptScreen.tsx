@@ -94,14 +94,15 @@ function Receipts() {
     <>
       <Card>
         <Body>
-          Your PDFs are private to your household. Automatic extraction is not
-          configured in this build; enter and review lines manually. When
-          extraction is enabled, receipt text may be sent to OpenAI and the PDF
-          may be sent for vision fallback.
+          Your PDFs are private to your household. Choosing Generate receipt
+          draft sends extracted text to OpenAI when the server is configured. If
+          PDF vision is enabled, the PDF may be sent for fallback. You can
+          instead enter and review lines manually.
         </Body>
         <Body>
-          Uploads and draft saves do not add groceries. Stock confirmation
-          belongs to a later milestone.
+          Uploads and draft saves do not add groceries. Review quantities and
+          storage locations, save your corrections, then explicitly confirm the
+          receipt to add stock.
         </Body>
         {!disclosed ? (
           <Button

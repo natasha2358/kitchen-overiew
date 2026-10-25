@@ -43,11 +43,12 @@ export function recordUsage(
   model: string,
   prompt: string,
   usage: { input_tokens: number; output_tokens: number },
+  functionName: "suggest-meals" | "parse-receipt" = "suggest-meals",
 ) {
   console.info(
     JSON.stringify({
       event: "model_usage",
-      function: "suggest-meals",
+      function: functionName,
       model,
       prompt_version: prompt,
       input_tokens: usage.input_tokens,

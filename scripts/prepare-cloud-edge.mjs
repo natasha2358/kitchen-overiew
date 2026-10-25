@@ -125,6 +125,13 @@ for (const name of functions) {
     alias,
   });
 }
+if (process.argv.includes("--test-fixtures")) {
+  await build({
+    ...common,
+    entryPoints: ["scripts/cloud-parser-fixture-entry.ts"],
+    outfile: resolve(root, "parse-receipt-fixture/index.js"),
+  });
+}
 await writeFile(
   resolve(root, "sources.json"),
   JSON.stringify(manifest, null, 2) + "\n",

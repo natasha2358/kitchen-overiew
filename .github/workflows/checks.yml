@@ -30,9 +30,12 @@ jobs:
       - run: npm run check:edge
       - run: npm run test:edge
       - run: npm run test:handlers
-      - run: npm run cloud:edge:prepare
-      - run: npm run cloud:edge:start
+      - run: npm run cloud:edge:prepare -- --test-fixtures
+      - run: npm run cloud:edge:start -- --test-fixtures
       - run: npm run test:edge:gateway
       - run: npm run test:services
       - run: npm run test:erasure
+      - run: npm run test:receipt-processing
+        env:
+          FUNCTIONS_TEST_URL: http://127.0.0.1:54321/functions/v1
       - run: npm run db:types && git diff --exit-code -- src/shared/database.types.ts

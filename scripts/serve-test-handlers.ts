@@ -1,3 +1,4 @@
+import { fixtureReceiptHandler } from "./fixture-receipt-handler.ts";
 import { handler as erase } from "../supabase/functions/erase-account/handler.ts";
 // Test harness only: real handlers and real local Auth/Storage, no runtime JWT shim.
 // Each handler must continue validating identity itself through Auth.getUser().
@@ -8,6 +9,7 @@ import { handler as suggest } from "../supabase/functions/suggest-meals/handler.
 const routes: Record<string, (request: Request) => Promise<Response>> = {
   "verify-receipt": verify,
   "parse-receipt": parse,
+  "parse-receipt-fixture": fixtureReceiptHandler,
   "delete-receipt-source": remove,
   "suggest-meals": suggest,
   "erase-account": erase,

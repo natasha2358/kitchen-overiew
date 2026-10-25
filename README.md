@@ -61,7 +61,15 @@ Local email rate limits are raised to 100/hour in `supabase/config.toml` for rep
 
 Run `supabase functions serve` in another terminal when using receipt uploads. All Edge Functions require JWT verification and perform their own user/ownership checks. The private `receipts` bucket is created by migration. No OpenAI credential is needed for upload verification or manual review.
 
-`parse-receipt` currently returns `501 PARSING_NOT_CONFIGURED`. Embedded-text extraction now has initial REWE-style fixture coverage, but automatic line interpretation, model orchestration and quality evaluation remain unfinished. An OpenAI key alone will not enable it. Store any future model key only in server-side Supabase function secrets, never an `EXPO_PUBLIC_*` value. Saved manual reviews can now be confirmed into stock, with duplicate warnings and retry protection. Source PDF deletion preserves confirmation history. Database confirmation/retry and real cloud Edge upload/deletion tests pass; physical-device flows remain unverified. Meal generation is available behind the configuration below. Shopping and planning are available as described below.
+`parse-receipt` now implements embedded-text interpretation and optional PDF vision fallback through the OpenAI Responses API. It remains `501 PARSING_NOT_CONFIGURED` without both server-only `OPENAI_API_KEY` and `OPENAI_RECEIPT_MODEL`. Configure a model supporting structured outputs; set `OPENAI_RECEIPT_VISION=true` only when that model also supports PDF file input. There is no default model and no live model-quality claim.
+
+Apply migrations through 015. Open a verified receipt and choose **Generate / retry receipt draft**, then review every source/proposal line, resolve quantities and product matches, assign locations, save the review and explicitly confirm stock. Deposits/discounts/non-food lines start excluded; ambiguous groceries remain unresolved. Manual entry remains available without model configuration. Saved edits, deleted sources and confirmed stock cannot be overwritten by a late model result.
+
+Each receipt permits two explicit attempts, each with at most two model calls shared by fallback and transient retries. Calls are reserved durably before sending, including requests whose replies are lost. Model work has a 45-second deadline and a 60-second lease; a disconnected client can reload or retry after lease expiry. Exhausted budgets require manual entry. Five recently processed receipt identities per household are allowed in ten minutes.
+
+Copy `.env.server.example` to an ignored `.env.server.local` and configure values through trusted server tooling, never chat or Expo public variables. With ordinary Supabase tooling use `supabase functions serve --env-file .env.server.local`. With this cloud's compatibility setup, recreate only `kitchen_cloud_edge` and run `npm run cloud:edge:start -- --model-env-file .env.server.local` after preparing bundles. This transfers only allowlisted model settings to the server. Do not combine live model configuration with test-fixture startup. Paid live evaluations have not been run.
+
+Saved reviews can be confirmed once into stock with duplicate warnings and retry protection. Source PDF deletion retains confirmation history. Deterministic model mocks and real Auth/Storage/PostgreSQL/Edge-worker tests pass; physical-device and live model-quality validation remain open.
 
 Additional checks:
 
@@ -73,7 +81,7 @@ npm run test:services   # Auth, private Storage and actual Edge runtime integrat
 npm run test:handlers   # real handlers with local Auth/Storage; no Edge bootstrap
 ```
 
-The cloud instance runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–013 applied. The real Edge Runtime now runs through the cloud compatibility setup below. You do not need Docker on your own computer for development or backend verification here. Physical Android testing still needs a device and a reachable test backend.
+The cloud instance runs PostgreSQL, Auth, Storage, REST, gateway, Mailpit and metadata, with migrations 001–015 applied. The real Edge Runtime now runs through the cloud compatibility setup below. You do not need Docker on your own computer for development or backend verification here. Physical Android testing still needs a device and a reachable test backend.
 
 ### Cloud Edge workaround (maintainer commands)
 
@@ -95,7 +103,7 @@ The sample REWE eBon is readable but owner-protected. Validation now accepts PDF
 
 ## Meal suggestions
 
-Apply all migrations through 013 and serve Edge Functions. Configure `OPENAI_API_KEY` and `OPENAI_MEAL_MODEL` only in an ignored server environment file passed to `supabase functions serve --env-file /path/to/server.env`. Select/evaluate a model that supports Responses structured outputs before claiming recipe quality. No default model or credentials are supplied. Without both values, generation returns `MEALS_NOT_CONFIGURED`. `store:false` is set on requests; this is not a promise of zero provider retention.
+Apply all migrations through 015 and serve Edge Functions. Configure `OPENAI_API_KEY` and `OPENAI_MEAL_MODEL` only in an ignored server environment file passed to `supabase functions serve --env-file /path/to/server.env`. Select/evaluate a model that supports Responses structured outputs before claiming recipe quality. No default model or credentials are supplied. Without both values, generation returns `MEALS_NOT_CONFIGURED`. `store:false` is set on requests; this is not a promise of zero provider retention.
 
 Save dietary choices, exclusions and servings in Recipes. Optional staple assumptions are edited in Kitchen's product catalogue, including products with no batch. Suggestions display measured stock separately from shortages and assumptions. Refresh before relying on a saved suggestion. No suggestion creates or consumes stock. Deterministic domain/database tests pass; live generation and device validation remain pending.
 
@@ -117,6 +125,16 @@ Choose **Review actual cooking usage** when you actually cook. Review the batch 
 
 ## Account deletion
 
-Apply migrations through 013 and serve Edge Functions. Open **Account settings**, enter the current password and type **DELETE MY ACCOUNT**. This permanently deletes the sole owner's private PDFs, household data and Auth account. Preparation freezes the kitchen; interrupted deletion must be resumed from Account, signing in again if needed. Pending drafts on the requesting device are cleared before server deletion.
+Apply migrations through 015 and serve Edge Functions. Open **Account settings**, enter the current password and type **DELETE MY ACCOUNT**. This permanently deletes the sole owner's private PDFs, household data and Auth account. Preparation freezes the kitchen; interrupted deletion must be resumed from Account, signing in again if needed. Pending drafts on the requesting device are cleared before server deletion.
 
 Local disposable-account integration and concurrency tests pass. Native UI and deployed runtime validation remain open. The cloud runs both handler tests and real runtime integration through the compatibility setup above. See [release readiness](docs/RELEASE_READINESS.md).
+
+### Receipt processing tests without paid model calls
+
+`npm run test:handlers` now includes receipt processing using a test-only injected provider with real local Auth/Storage/database services. To run the same mocked workflow inside real Edge workers, prepare/start with the explicit `--test-fixtures` flag, then run:
+
+```sh
+FUNCTIONS_TEST_URL=http://127.0.0.1:54321/functions/v1 npm run test:receipt-processing
+```
+
+The extra `parse-receipt-fixture` route requires normal JWT and user checks and is absent from normal startup. It is not a production parsing endpoint. Restart without `--test-fixtures` afterward. CI runs this fixture mode without live model keys.

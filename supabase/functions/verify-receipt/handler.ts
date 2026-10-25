@@ -65,7 +65,14 @@ export const handler = observe("verify-receipt", async (request) => {
         { error: "Could not register this receipt. Retry verification." },
         500,
       );
-    return response({ ...saved.data, pages, parsing: "not_configured" });
+    return response({
+      ...saved.data,
+      pages,
+      parsing:
+        Deno.env.get("OPENAI_API_KEY") && Deno.env.get("OPENAI_RECEIPT_MODEL")
+          ? "configured"
+          : "not_configured",
+    });
   } catch (e) {
     return response(
       { error: e instanceof Error ? e.message : "Invalid PDF." },

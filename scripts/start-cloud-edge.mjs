@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { parseEnv } from "node:util";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -12,6 +13,8 @@ const functions = [
   "suggest-meals",
   "erase-account",
 ];
+if (process.argv.includes("--test-fixtures"))
+  functions.push("parse-receipt-fixture");
 const config = Object.fromEntries(
   functions.map((name) => [
     name,
@@ -22,12 +25,36 @@ const config = Object.fromEntries(
     },
   ]),
 );
+const modelEnvIndex = process.argv.indexOf("--model-env-file");
+const modelEnvironment = {};
+if (modelEnvIndex !== -1) {
+  if (process.argv.includes("--test-fixtures"))
+    throw new Error("Fixture runtime cannot receive live model configuration");
+  const path = process.argv[modelEnvIndex + 1];
+  if (!path || path.startsWith("--"))
+    throw new Error("Provide a server environment file path");
+  const supplied = parseEnv(readFileSync(path, "utf8"));
+  for (const key of [
+    "OPENAI_API_KEY",
+    "OPENAI_RECEIPT_MODEL",
+    "OPENAI_RECEIPT_VISION",
+    "OPENAI_MEAL_MODEL",
+  ]) {
+    const value = supplied[key];
+    if (value) {
+      if (/[\r\n]/u.test(value))
+        throw new Error("Model environment values must be single-line");
+      modelEnvironment[key] = value;
+    }
+  }
+}
 const directory = mkdtempSync(join(tmpdir(), "kitchen-edge-"));
 const envFile = join(directory, "runtime.env");
 try {
   writeFileSync(
     envFile,
     Object.entries({
+      ...modelEnvironment,
       NO_PROXY: "kong,auth,rest,storage,127.0.0.1,localhost",
       no_proxy: "kong,auth,rest,storage,127.0.0.1,localhost",
       SUPABASE_URL: "http://kong:8000",

@@ -44,6 +44,7 @@ try {
   for (const script of [
     "scripts/test-services.mjs",
     "scripts/test-erasure.mjs",
+    "scripts/test-receipt-processing.mjs",
   ]) {
     const test = spawn(process.execPath, [script], {
       env: {

@@ -60,7 +60,25 @@ export async function verifyReceipt(id: string) {
       id: z.uuid(),
       duplicate: z.boolean(),
       pages: z.number().int(),
-      parsing: z.literal("not_configured"),
+      parsing: z.enum(["configured", "not_configured"]),
     })
     .parse(r.data);
+}
+
+export async function parseReceipt(id: string, revision: number) {
+  const result = await backend().functions.invoke("parse-receipt", {
+    body: { receipt_id: id, revision },
+  });
+  if (result.error) {
+    if (result.error.context instanceof Response) {
+      const detail = z
+        .object({ error: z.string() })
+        .safeParse(await result.error.context.json());
+      if (detail.success) throw new Error(detail.data.error);
+    }
+    throw result.error;
+  }
+  return z
+    .object({ id: z.uuid(), status: z.enum(["pending", "completed"]) })
+    .parse(result.data);
 }
