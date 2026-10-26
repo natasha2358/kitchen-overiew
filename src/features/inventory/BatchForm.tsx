@@ -7,7 +7,16 @@ import { z } from "zod";
 import { AuthGate } from "../auth/AuthGate";
 import { useHousehold } from "../auth/useHousehold";
 import { useAuth } from "../auth/Providers";
-import { Body, Button, Card, Field, Problem, Screen } from "../../shared/ui";
+import {
+  Choice,
+  Segments,
+  Body,
+  Button,
+  Card,
+  Field,
+  Problem,
+  Screen,
+} from "../../shared/ui";
 import { messageOf } from "../../shared/errors";
 import { useLocations, useProducts } from "./api";
 import { canonicalQuantity, matchProducts, Unit, unitSchema } from "./quantity";
@@ -105,15 +114,13 @@ function Form() {
         keyboardType="decimal-pad"
         editable={!busy}
       />
-      <Body>Unit</Body>
-      {unitSchema.options.map((u) => (
-        <Button
-          key={u}
-          title={(unit === u ? "✓ " : "") + u}
-          onPress={() => setUnit(u)}
-          disabled={busy}
-        />
-      ))}
+      <Segments
+        label="Unit"
+        value={unit}
+        options={unitSchema.options.map((u) => ({ value: u, label: u }))}
+        onChange={setUnit}
+        disabled={busy}
+      />
       <Field
         label="Number of packages"
         value={packages}
@@ -121,15 +128,16 @@ function Form() {
         keyboardType="number-pad"
         editable={!busy}
       />
-      <Body>Storage location</Body>
-      {locations.data?.map((l) => (
-        <Button
-          key={l.id}
-          title={(location === l.id ? "✓ " : "") + l.name}
-          onPress={() => setLocation(l.id)}
-          disabled={busy}
-        />
-      ))}
+      <Choice
+        label="Storage location"
+        value={location}
+        options={(locations.data ?? []).map((l) => ({
+          value: l.id,
+          label: l.name,
+        }))}
+        onChange={setLocation}
+        disabled={busy}
+      />
       <Field
         label="Expiry (YYYY-MM-DD, optional)"
         value={expiry}
@@ -139,6 +147,7 @@ function Form() {
       />
       {!!error && <Problem message={error} />}
       <Button
+        variant="primary"
         title={busy ? "Saving…" : "Add groceries"}
         onPress={() => void save()}
         disabled={busy || !online || (matches.length > 1 && !productId)}

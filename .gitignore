@@ -12,3 +12,5 @@ android/
 ios/
 
 .cloud-edge/
+
+.ui-artifacts/

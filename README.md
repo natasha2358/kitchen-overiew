@@ -150,3 +150,13 @@ FUNCTIONS_TEST_URL=http://127.0.0.1:54321/functions/v1 npm run test:receipt-proc
 ```
 
 The extra `parse-receipt-fixture` route requires normal JWT and user checks and is absent from normal startup. It is not a production parsing endpoint. Restart without `--test-fixtures` afterward. CI runs this fixture mode without live model keys.
+
+## Compact interface and browser checks
+
+Kitchen uses searchable ingredient rows. On wide screens, select a row to edit beside the list; on phones, tap it to open the detail screen. Use the quantity/location/expiry controls for batch changes, **More batch actions** for waste/removal, and **Edit product** for the selected ingredient's name, aliases and staple preference. Stock changes still require confirmation. Storage filters and the catalogue are under **Filters & kitchen settings**.
+
+Shopping has a list/editor layout on desktop; Planner uses responsive day columns. Product/location selectors are searchable, recipe preferences and steps expand on demand, and receipt review keeps unresolved values and warnings visible.
+
+`npm run test:ui` runs Chromium against the local test Supabase instance with disposable users and inventory. It requires the Supabase CLI (`SUPABASE_BIN` can select its path), a running local test backend (the cloud setup is sufficient), Chromium (`CHROMIUM_PATH`, default `/usr/bin/chromium`), and free port 8091. `playwright-core` is a development-only dependency and does not download a browser. The script starts/stops Expo, checks desktop/mobile-web interactions and saves fictional-data screenshots in ignored `.ui-artifacts/`; it removes its own test household through account erasure. It does not call AI or touch a hosted project. Use the documented cloud Expo cache environment overrides when needed.
+
+These checks do not replace physical Android, TalkBack, enlarged-font or keyboard acceptance testing.

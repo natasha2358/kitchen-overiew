@@ -67,3 +67,7 @@ Migrations 014–015 implement two attempts/two reserved calls per attempt, acti
 Evidence: 51 client tests in 12 suites, lint and TypeScript passed; 17 Edge tests and compilation passed; real database isolation/rollback/lease/call-budget tests passed. The mocked full flow also passed in real Edge workers behind Kong, including concurrent requests, fallback/refusal, source-hash mismatch, rate limiting, preserved edits, manual confirmation and unchanged stock before confirmation. Android Hermes/web exports passed. Fixture routes are test-only and normal startup excludes them.
 
 No paid model call or real-model extraction accuracy evaluation occurred. No physical Android, native APK, hosted deployment or staging evidence was added. Original receipt data remains outside Git. A chosen/configured model and explicitly authorized live evaluation are the next quality gate; mock output is never evidence of model quality.
+
+### Compact UI verification (2026-10-26)
+
+Chromium desktop and phone-sized web smoke checks now run with `npm run test:ui` and disposable loopback Supabase fixtures. Kitchen list/detail navigation, confirmed location change, selected product editing, removal confirmation gating, route loading and horizontal overflow checks passed. The phone-sized inventory viewport displays at least four complete rows. This evidence does not close physical Android/TalkBack/enlarged-font acceptance or full populated workflow/device testing.

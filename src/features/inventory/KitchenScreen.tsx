@@ -99,38 +99,7 @@ function Inventory() {
           onPress={() => router.push("/receipts")}
           disabled={!online}
         />
-        <Button
-          title="Products and storage locations"
-          onPress={() => router.push("/inventory/catalog")}
-        />
       </Toolbar>
-      <Card>
-        <Field
-          label="Search ingredients"
-          value={search}
-          onChangeText={setSearch}
-        />
-        <Choice
-          label="Storage"
-          value={filter}
-          onChange={setFilter}
-          options={[
-            { value: "", label: "All locations" },
-            ...(locations.data ?? []).map((l) => ({
-              value: l.id,
-              label: l.name,
-            })),
-          ]}
-        />
-        <Disclosure title="More filters">
-          <Button
-            title={
-              history ? "Hide exhausted batches" : "Include exhausted batches"
-            }
-            onPress={() => setHistory(!history)}
-          />
-        </Disclosure>
-      </Card>
       {!!inventory.isPending && <Loading />}
       {!!inventory.isError && (
         <Card>
@@ -151,6 +120,40 @@ function Inventory() {
       <SplitPane
         main={
           <>
+            <Card>
+              <Field
+                label="Search ingredients"
+                value={search}
+                onChangeText={setSearch}
+              />
+              <Disclosure title="Filters & kitchen settings">
+                <Choice
+                  label="Storage"
+                  value={filter}
+                  onChange={setFilter}
+                  options={[
+                    { value: "", label: "All locations" },
+                    ...(locations.data ?? []).map((l) => ({
+                      value: l.id,
+                      label: l.name,
+                    })),
+                  ]}
+                />
+                <Button
+                  title="Products and storage locations"
+                  onPress={() => router.push("/inventory/catalog")}
+                />
+
+                <Button
+                  title={
+                    history
+                      ? "Hide exhausted batches"
+                      : "Include exhausted batches"
+                  }
+                  onPress={() => setHistory(!history)}
+                />
+              </Disclosure>
+            </Card>
             <Heading>{batches.length} batches</Heading>
             {batches.map((b) => (
               <ItemRow

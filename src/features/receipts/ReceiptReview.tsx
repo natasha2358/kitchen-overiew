@@ -7,6 +7,8 @@ import { z } from "zod";
 import { backend } from "../../shared/supabase";
 import { messageOf } from "../../shared/errors";
 import {
+  Choice,
+  Segments,
   Body,
   Button,
   Card,
@@ -447,17 +449,27 @@ export function ReceiptEditor({
                 }
                 editable={!busy}
               />
-              <Body>Existing product (optional)</Body>
-              {products.data?.map((p) => (
-                <Button
-                  key={p.id}
-                  title={(line.product_id === p.id ? "✓ " : "") + p.name}
-                  onPress={() =>
-                    change(line.id, { product_id: p.id, reviewed_name: p.name })
-                  }
-                  disabled={busy}
-                />
-              ))}
+              <Choice
+                label="Existing product (optional)"
+                value={line.product_id ?? ""}
+                options={[
+                  { value: "", label: "Create from reviewed name" },
+                  ...(products.data ?? []).map((p) => ({
+                    value: p.id,
+                    label: p.name,
+                  })),
+                ]}
+                onChange={(id) => {
+                  const p = products.data?.find((p) => p.id === id);
+                  change(
+                    line.id,
+                    p
+                      ? { product_id: p.id, reviewed_name: p.name }
+                      : { product_id: null },
+                  );
+                }}
+                disabled={busy}
+              />
               <Field
                 label="Quantity (blank if unresolved)"
                 value={line.quantity ?? ""}
@@ -465,24 +477,28 @@ export function ReceiptEditor({
                 keyboardType="decimal-pad"
                 editable={!busy}
               />
-              <Body>Unit: {line.unit ?? "Unresolved"}</Body>
-              {(["g", "kg", "ml", "l", "item"] as const).map((u) => (
-                <Button
-                  key={u}
-                  title={(line.unit === u ? "✓ " : "") + u}
-                  onPress={() => change(line.id, { unit: u })}
-                  disabled={busy}
-                />
-              ))}
-              <Body>Storage location</Body>
-              {locations.data?.map((l) => (
-                <Button
-                  key={l.id}
-                  title={(line.location_id === l.id ? "✓ " : "") + l.name}
-                  onPress={() => change(line.id, { location_id: l.id })}
-                  disabled={busy}
-                />
-              ))}
+              <Segments
+                label={`Unit: ${line.unit ?? "Unresolved"}`}
+                value={line.unit ?? ""}
+                options={(["g", "kg", "ml", "l", "item"] as const).map((u) => ({
+                  value: u,
+                  label: u,
+                }))}
+                onChange={(unit) => {
+                  if (unit) change(line.id, { unit });
+                }}
+                disabled={busy}
+              />
+              <Choice
+                label="Storage location"
+                value={line.location_id ?? ""}
+                options={(locations.data ?? []).map((l) => ({
+                  value: l.id,
+                  label: l.name,
+                }))}
+                onChange={(location_id) => change(line.id, { location_id })}
+                disabled={busy}
+              />
               <Field
                 label="Expiry (YYYY-MM-DD, optional)"
                 value={line.expiry ?? ""}

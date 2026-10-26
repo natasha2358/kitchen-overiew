@@ -3,6 +3,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { randomUUID } from "expo-crypto";
 import { Decimal } from "decimal.js";
 import {
+  Choice,
+  Segments,
+  Toolbar,
+  Disclosure,
+  SplitPane,
   Body,
   Button,
   Card,
@@ -63,32 +68,36 @@ function Editor({
         editable={!blocked}
         onChangeText={(quantity) => setForm({ ...form, quantity })}
       />
-      {(["g", "ml", "item"] as const).map((unit) => (
-        <Button
-          key={unit}
-          title={(unit === form.unit ? "✓ " : "") + unit}
-          disabled={blocked}
-          onPress={() => setForm({ ...form, unit, product_id: null })}
-        />
-      ))}
-      <Body>Optional existing product</Body>
-      {products.data?.map((p) => (
-        <Button
-          key={p.id}
-          title={(form.product_id === p.id ? "✓ " : "") + p.name}
-          disabled={blocked}
-          onPress={() =>
-            setForm({
-              ...form,
-              product_id: p.id,
-              label: p.name,
-              unit: p.base_unit,
-            })
-          }
-        />
-      ))}
+      <Segments
+        label="Unit"
+        value={form.unit}
+        options={(["g", "ml", "item"] as const).map((unit) => ({
+          value: unit,
+          label: unit,
+        }))}
+        disabled={blocked}
+        onChange={(unit) => setForm({ ...form, unit, product_id: null })}
+      />
+      <Choice
+        label="Existing product"
+        value={form.product_id ?? ""}
+        options={[
+          { value: "", label: "No linked product" },
+          ...(products.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+        ]}
+        disabled={blocked}
+        onChange={(id) => {
+          const p = products.data?.find((p) => p.id === id);
+          setForm(
+            p
+              ? { ...form, product_id: p.id, label: p.name, unit: p.base_unit }
+              : { ...form, product_id: null },
+          );
+        }}
+      />
       {!!error && <Problem message={error} />}
       <Button
+        variant="primary"
         title="Save shopping item"
         disabled={blocked}
         onPress={() => {
@@ -144,15 +153,17 @@ function Shopping() {
             onPress={() => void action.retry()}
           />
         )}
-        <Button
-          title="Refresh shopping list"
-          disabled={action.busy || !action.online}
-          onPress={() => void items.refetch()}
-        />
-        <Button
-          title={archived ? "Hide removed items" : "Show removed items"}
-          onPress={() => setArchived((v) => !v)}
-        />
+        <Toolbar>
+          <Button
+            title="Refresh shopping list"
+            disabled={action.busy || !action.online}
+            onPress={() => void items.refetch()}
+          />
+          <Button
+            title={archived ? "Hide removed items" : "Show removed items"}
+            onPress={() => setArchived((v) => !v)}
+          />
+        </Toolbar>
       </Card>
       {!!suggestion && (
         <Card>
@@ -195,78 +206,96 @@ function Shopping() {
           />
         </Card>
       )}
-      {!!items.isPending && <Loading />}
-      {!!items.isError && <Problem message={messageOf(items.error)} />}
-      {items.data?.filter((i) => archived || !i.removed).length === 0 && (
-        <Body>Your shopping list is empty.</Body>
-      )}
-      {items.data
-        ?.filter((i) => archived || !i.removed)
-        .map((i) => (
-          <Card key={i.id}>
-            <Body>
-              {i.removed
-                ? "Removed · "
-                : i.checked
-                  ? "Purchased · "
-                  : "To buy · "}
-              {i.label}: {i.quantity} {i.unit}
-            </Body>
+      <SplitPane
+        main={
+          <>
+            {!!items.isPending && <Loading />}
+            {!!items.isError && <Problem message={messageOf(items.error)} />}
+            {items.data?.filter((i) => archived || !i.removed).length === 0 && (
+              <Body>Your shopping list is empty.</Body>
+            )}
+            {items.data
+              ?.filter((i) => archived || !i.removed)
+              .map((i) => (
+                <Card key={i.id}>
+                  <Body>
+                    {i.removed
+                      ? "Removed · "
+                      : i.checked
+                        ? "Purchased · "
+                        : "To buy · "}
+                    {i.label}: {i.quantity} {i.unit}
+                  </Body>
+                  <Toolbar>
+                    <Button
+                      title={
+                        i.checked ? "Mark not purchased" : "Mark purchased"
+                      }
+                      disabled={action.blocked || i.removed}
+                      onPress={() =>
+                        void action.perform({
+                          ...i,
+                          action: "shopping_save",
+                          checked: !i.checked,
+                        })
+                      }
+                    />
+                    <Button
+                      title="Edit item"
+                      disabled={action.blocked}
+                      onPress={() => {
+                        setSelected(i);
+                        setEditorKey((v) => v + 1);
+                      }}
+                    />
+                  </Toolbar>
+                  <Disclosure title="More item actions">
+                    <Button
+                      title={
+                        i.removed ? "Restore item" : "Remove item from list"
+                      }
+                      disabled={action.blocked}
+                      onPress={() =>
+                        void action.perform({
+                          ...i,
+                          action: "shopping_save",
+                          removed: !i.removed,
+                        })
+                      }
+                    />
+                  </Disclosure>
+                </Card>
+              ))}
+          </>
+        }
+        detail={
+          <>
             <Button
-              title={i.checked ? "Mark not purchased" : "Mark purchased"}
-              disabled={action.blocked || i.removed}
-              onPress={() =>
-                void action.perform({
-                  ...i,
-                  action: "shopping_save",
-                  checked: !i.checked,
-                })
-              }
-            />
-            <Button
-              title="Edit item"
+              title="New item / discard editor changes"
               disabled={action.blocked}
               onPress={() => {
-                setSelected(i);
+                setSelected(undefined);
                 setEditorKey((v) => v + 1);
               }}
             />
-            <Button
-              title={i.removed ? "Restore item" : "Remove item from list"}
-              disabled={action.blocked}
-              onPress={() =>
-                void action.perform({
-                  ...i,
+            <Editor
+              key={editorKey}
+              initial={selected}
+              blocked={action.blocked}
+              onSave={async (value) => {
+                const ok = await action.perform({
+                  ...value,
                   action: "shopping_save",
-                  removed: !i.removed,
-                })
-              }
+                });
+                if (ok) {
+                  setSelected(undefined);
+                  setEditorKey((v) => v + 1);
+                }
+                return ok;
+              }}
             />
-          </Card>
-        ))}
-      <Button
-        title="New item / discard editor changes"
-        disabled={action.blocked}
-        onPress={() => {
-          setSelected(undefined);
-          setEditorKey((v) => v + 1);
-        }}
-      />
-      <Editor
-        key={editorKey}
-        initial={selected}
-        blocked={action.blocked}
-        onSave={async (value) => {
-          const ok = await action.perform({
-            ...value,
-            action: "shopping_save",
-          });
-          if (ok) {
-            setSelected(undefined);
-            setEditorKey((v) => v + 1);
-          }
-          return ok;
-        }}
+          </>
+        }
       />
     </>
   );

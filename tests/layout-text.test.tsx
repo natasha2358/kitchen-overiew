@@ -1,6 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { BatchDetail } from "../src/features/inventory/BatchDetail";
+
 import { ShoppingScreen } from "../src/features/shopping/ShoppingScreen";
+const mockSubmit = jest.fn();
+jest.mock("../src/features/inventory/intent", () => ({
+  submitIntent: (...args: unknown[]) => mockSubmit(...args),
+}));
 
 jest.mock("../src/shared/ui", () => {
   const actual =
@@ -86,4 +91,32 @@ test("shopping renders empty feedback and shows validation errors inside text", 
   expect(screen.getByText("Your shopping list is empty.")).toBeTruthy();
   await fireEvent.press(screen.getByText("Save shopping item"));
   expect(screen.getByRole("alert")).toBeTruthy();
+});
+
+test("choosing removal does not mutate stock until its explicit confirmation", async () => {
+  await render(<BatchDetail />);
+  expect(
+    screen.queryByRole("button", { name: "Remove remaining stock" }),
+  ).toBeNull();
+  await fireEvent.press(
+    screen.getByRole("button", { name: /More batch actions/ }),
+  );
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Remove remaining stock" }),
+  );
+  expect(mockSubmit).not.toHaveBeenCalled();
+  await fireEvent.press(
+    screen.getByRole("button", {
+      name: "Confirm removal of all remaining stock",
+    }),
+  );
+  expect(mockSubmit).toHaveBeenCalledWith(
+    "household",
+    "test-id",
+    expect.objectContaining({
+      action: "remove",
+      batch_id: "batch",
+      revision: 1,
+    }),
+  );
 });

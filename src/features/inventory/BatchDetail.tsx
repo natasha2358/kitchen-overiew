@@ -1,3 +1,4 @@
+import { Decimal } from "decimal.js";
 import { submitIntent } from "./intent";
 import { useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -24,7 +25,7 @@ import { AuthGate } from "../auth/AuthGate";
 import { useAuth } from "../auth/Providers";
 import { useHousehold } from "../auth/useHousehold";
 import { Batch, useInventory, useLocations } from "./api";
-import { decimalSchema } from "./quantity";
+import { decimalSchema, sumQuantities } from "./quantity";
 const historySchema = z.array(
   z.object({
     id: z.uuid(),
@@ -46,6 +47,7 @@ export function BatchEditor({
   const client = useQueryClient();
   const router = useRouter();
   const locations = useLocations();
+  const inventory = useInventory();
   const [action, setAction] = useState<
     "add" | "adjust" | "waste" | "move" | "edit" | "remove"
   >("adjust");
@@ -110,7 +112,8 @@ export function BatchEditor({
     <>
       <Card>
         <Body>
-          {batch.name} · {batch.quantity} {batch.base_unit}
+          {batch.name} · {new Decimal(batch.quantity).toFixed()}{" "}
+          {batch.base_unit}
         </Body>
         <Body>
           {batch.location} · {batch.expiry ?? "Expiry unknown"}
@@ -207,18 +210,35 @@ export function BatchEditor({
           onPress={() => void save()}
           disabled={busy || !online}
         />
-        <Button
-          title="Refresh stock after a conflict"
-          onPress={() =>
-            void client.invalidateQueries({
-              queryKey: ["inventory", h.data?.id],
-            })
-          }
-          disabled={busy || !online}
-        />
+        {!!error && (
+          <Button
+            title="Refresh stock after a conflict"
+            onPress={() =>
+              void client.invalidateQueries({
+                queryKey: ["inventory", h.data?.id],
+              })
+            }
+            disabled={busy || !online}
+          />
+        )}
       </Card>
       <Card>
         <Heading>Product settings</Heading>
+        {!!inventory.data && (
+          <Body>
+            Product total:{" "}
+            {sumQuantities(
+              inventory.data
+                .filter(
+                  (other) =>
+                    other.product_id === batch.product_id &&
+                    other.base_unit === batch.base_unit,
+                )
+                .map((other) => other.quantity),
+            )}{" "}
+            {batch.base_unit}
+          </Body>
+        )}
         <Body>
           Name, aliases and staple preferences apply to every batch of this
           ingredient.

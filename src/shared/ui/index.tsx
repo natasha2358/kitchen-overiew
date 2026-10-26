@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { Children, isValidElement, ReactNode, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -35,7 +35,6 @@ export function Screen({
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.eyebrow}>SMART KITCHEN</Text>
       <Text accessibilityRole="header" style={styles.title}>
         {title}
       </Text>
@@ -134,6 +133,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 16,
+    boxShadow: "0 2px 8px rgba(22, 55, 43, 0.04)",
     padding: 14,
     gap: 8,
   },
@@ -428,5 +428,32 @@ export function ItemRow({
         {subtitle}
       </Text>
     </Pressable>
+  );
+}
+
+export function Grid({ children }: { children: ReactNode }) {
+  const { width, fontScale } = useWindowDimensions();
+  const columns = fontScale > 1.3 || width < 760 ? 1 : width < 1100 ? 2 : 3;
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 12,
+        alignItems: "flex-start",
+      }}
+    >
+      {Children.toArray(children).map((child, index) => (
+        <View
+          key={isValidElement(child) ? (child.key ?? index) : index}
+          style={{
+            width: columns === 1 ? "100%" : columns === 2 ? "49%" : "32%",
+            minWidth: 0,
+          }}
+        >
+          {child}
+        </View>
+      ))}
+    </View>
   );
 }

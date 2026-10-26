@@ -150,3 +150,5 @@ M4 follow-through (2026-10-25): one private German REWE eBon supplied; fictional
 M4 integration checkpoint: migrations 014–015, Responses text/PDF routing, reserved call budgets, stale-result protection, proposal review UI and source-order coverage are implemented. Mocked provider tests cover the full upload → proposal → reviewed stock confirmation journey in real Edge workers. M4/M8 exit gates still require live model/fixture accuracy, latency/cost and physical Android evidence.
 
 UI refinement: compact shared components and Kitchen list/detail editing are implemented. Apply selectors and grouped actions to other workflows, then verify exports and UI regressions. Physical Android/TalkBack and browser acceptance remain release gates.
+
+UI refinement stage 2: compact choices/grouped actions now cover grocery creation, catalogue, Shopping, Planner, Recipes and receipt review. Chromium desktop/mobile-web smoke checks and screenshots are recorded in implementation status. Native Android/TalkBack and full release acceptance remain open.

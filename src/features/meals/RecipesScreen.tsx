@@ -4,6 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { randomUUID } from "expo-crypto";
 import { z } from "zod";
 import {
+  Toolbar,
+  Disclosure,
   Body,
   Button,
   Card,
@@ -70,18 +72,20 @@ function Preferences({ context }: { context: MealContext }) {
   return (
     <Card>
       <Body>Food preferences</Body>
-      {(["vegetarian", "vegan", "gluten_free"] as const).map((d) => (
-        <Button
-          key={d}
-          title={(dietary.includes(d) ? "✓ " : "") + d.replaceAll("_", " ")}
-          onPress={() =>
-            setDietary((old) =>
-              old.includes(d) ? old.filter((x) => x !== d) : [...old, d],
-            )
-          }
-          disabled={busy}
-        />
-      ))}
+      <Toolbar>
+        {(["vegetarian", "vegan", "gluten_free"] as const).map((d) => (
+          <Button
+            key={d}
+            title={(dietary.includes(d) ? "✓ " : "") + d.replaceAll("_", " ")}
+            onPress={() =>
+              setDietary((old) =>
+                old.includes(d) ? old.filter((x) => x !== d) : [...old, d],
+              )
+            }
+            disabled={busy}
+          />
+        ))}
+      </Toolbar>
       <Field
         label="Excluded ingredients (comma-separated)"
         value={excluded}
@@ -97,6 +101,7 @@ function Preferences({ context }: { context: MealContext }) {
       />
       {!!error && <Problem message={error} />}
       <Button
+        variant="primary"
         title="Save preferences"
         onPress={() => void save()}
         disabled={busy || !online}
@@ -142,10 +147,12 @@ function Recipes() {
         title="Record a meal manually / recover cooking"
         onPress={() => router.push("/cooking")}
       />
-      <Preferences
-        key={context.data.preferences.revision}
-        context={context.data}
-      />
+      <Disclosure title="Food preferences">
+        <Preferences
+          key={context.data.preferences.revision}
+          context={context.data}
+        />
+      </Disclosure>
       <Card>
         <Body>
           Meal suggestions send relevant stock, designated staples and saved
@@ -250,41 +257,45 @@ function Recipes() {
                       : ingredient.state}
                   </Body>
                 ))}
-                {recipe.steps.map((step, i) => (
-                  <Body key={i}>
-                    {i + 1}. {step}
-                  </Body>
-                ))}
-                <Button
-                  title="Schedule this meal"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(tabs)/planner",
-                      params: { suggestion: s.id, index: String(index) },
-                    })
-                  }
-                  disabled={!online}
-                />
-                <Button
-                  title="Review shopping shortages"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(tabs)/shopping",
-                      params: { suggestion: s.id, index: String(index) },
-                    })
-                  }
-                  disabled={!online}
-                />
-                <Button
-                  title="Review actual cooking usage"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/cooking",
-                      params: { suggestion: s.id, index: String(index) },
-                    })
-                  }
-                  disabled={!online}
-                />
+                <Disclosure title="Preparation steps">
+                  {recipe.steps.map((step, i) => (
+                    <Body key={i}>
+                      {i + 1}. {step}
+                    </Body>
+                  ))}
+                </Disclosure>
+                <Toolbar>
+                  <Button
+                    title="Schedule this meal"
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(tabs)/planner",
+                        params: { suggestion: s.id, index: String(index) },
+                      })
+                    }
+                    disabled={!online}
+                  />
+                  <Button
+                    title="Review shopping shortages"
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(tabs)/shopping",
+                        params: { suggestion: s.id, index: String(index) },
+                      })
+                    }
+                    disabled={!online}
+                  />
+                  <Button
+                    title="Review actual cooking usage"
+                    onPress={() =>
+                      router.push({
+                        pathname: "/cooking",
+                        params: { suggestion: s.id, index: String(index) },
+                      })
+                    }
+                    disabled={!online}
+                  />
+                </Toolbar>
               </Card>
             );
           })}

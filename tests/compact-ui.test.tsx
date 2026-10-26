@@ -39,7 +39,9 @@ test("disabled selections cannot change and expose their selected state", async 
       disabled
     />,
   );
-  expect(screen.getByRole("radio", { name: "Grams", checked: true, disabled: true })).toBeTruthy();
+  expect(
+    screen.getByRole("radio", { name: "Grams", checked: true, disabled: true }),
+  ).toBeTruthy();
   await fireEvent.press(screen.getByRole("radio", { name: "Millilitres" }));
   expect(onChange).not.toHaveBeenCalled();
 });
