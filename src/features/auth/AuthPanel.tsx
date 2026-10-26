@@ -107,7 +107,7 @@ export function AuthPanel() {
           autoComplete="email"
         />
       )}
-      {(recovery || mode !== "reset") && (
+      {!!(recovery || mode !== "reset") && (
         <Field
           label="Password"
           value={password}

@@ -37,6 +37,18 @@ Supabase authentication requires email confirmation. Local emails are available 
 4. If Expo Go does not support this SDK, install the Android SDK/JDK required by Expo, then run `npx expo run:android` to build and install locally. Generated `android/` is ignored. No EAS or production publication is needed.
 5. Create an account, verify its email using the local Mailpit link on the same client, then sign in. A household and three default locations are provisioned once.
 
+### Missing dependency when starting Android
+
+If Metro reports `Unable to resolve "react-native-screens"`, stop Expo with Ctrl+C and run these commands from the folder containing `package.json` (PowerShell or a terminal):
+
+```sh
+npm ci
+npm ls react-native-screens
+npx expo start --clear --lan
+```
+
+The package and its Expo-compatible version are already in the committed manifest and lockfile. `npm ci` restores that exact dependency tree; keep `package-lock.json`. Then reopen the app or press `a` for an Android emulator. If installation fails, resolve that npm error before restarting Metro. The React DevTools message on web is informational.
+
 ## Checks
 
 Automated testing has resumed. See docs/RELEASE_READINESS.md for passing checks and remaining release gates.

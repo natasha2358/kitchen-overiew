@@ -137,7 +137,7 @@ function Form() {
         placeholder="Unknown"
         editable={!busy}
       />
-      {error && <Problem message={error} />}
+      {!!error && <Problem message={error} />}
       <Button
         title={busy ? "Saving…" : "Add groceries"}
         onPress={() => void save()}

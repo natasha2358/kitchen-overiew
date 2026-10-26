@@ -87,7 +87,7 @@ function Editor({
           }
         />
       ))}
-      {error && <Problem message={error} />}
+      {!!error && <Problem message={error} />}
       <Button
         title="Save shopping item"
         disabled={blocked}
@@ -135,9 +135,9 @@ function Shopping() {
           Checking off a purchase only updates this list. Add bought groceries
           to Kitchen or import a receipt to change stock.
         </Body>
-        {action.error && <Problem message={action.error} />}{" "}
-        {action.notice && <Body>{action.notice}</Body>}
-        {action.pending && (
+        {!!action.error && <Problem message={action.error} />}
+        {!!action.notice && <Body>{action.notice}</Body>}
+        {!!action.pending && (
           <Button
             title="Retry pending shopping change"
             disabled={action.busy || !action.online}
@@ -154,17 +154,17 @@ function Shopping() {
           onPress={() => setArchived((v) => !v)}
         />
       </Card>
-      {suggestion && (
+      {!!suggestion && (
         <Card>
           <Body>
             Review measured shortages. Adding a staple shortage is optional.
             Quantities are recomputed by the server; adding the same recipe
             ingredient again opens its existing list item without increasing it.
           </Body>
-          {(saved.isPending || context.isPending) && <Loading />}
-          {saved.isError && <Problem message={messageOf(saved.error)} />}{" "}
-          {context.isError && <Problem message={messageOf(context.error)} />}{" "}
-          {proposalError && <Problem message={proposalError} />}{" "}
+          {!!(saved.isPending || context.isPending) && <Loading />}
+          {!!saved.isError && <Problem message={messageOf(saved.error)} />}
+          {!!context.isError && <Problem message={messageOf(context.error)} />}
+          {!!proposalError && <Problem message={proposalError} />}
           {candidates.map(
             (i, n) =>
               new Decimal(i.shortage).gt(0) && (
@@ -195,8 +195,8 @@ function Shopping() {
           />
         </Card>
       )}
-      {items.isPending && <Loading />}
-      {items.isError && <Problem message={messageOf(items.error)} />}{" "}
+      {!!items.isPending && <Loading />}
+      {!!items.isError && <Problem message={messageOf(items.error)} />}
       {items.data?.filter((i) => archived || !i.removed).length === 0 && (
         <Body>Your shopping list is empty.</Body>
       )}

@@ -95,7 +95,7 @@ function Preferences({ context }: { context: MealContext }) {
         keyboardType="number-pad"
         editable={!busy}
       />
-      {error && <Problem message={error} />}
+      {!!error && <Problem message={error} />}
       <Button
         title="Save preferences"
         onPress={() => void save()}
@@ -186,10 +186,10 @@ function Recipes() {
               catalogue.
             </Body>
           )}
-        {error && <Problem message={error} />}
+        {!!error && <Problem message={error} />}
       </Card>
-      {suggestions.isPending && <Loading />}
-      {suggestions.isError && (
+      {!!suggestions.isPending && <Loading />}
+      {!!suggestions.isError && (
         <Problem message={messageOf(suggestions.error)} />
       )}
       {suggestions.data?.length === 0 && <Body>No saved suggestions yet.</Body>}

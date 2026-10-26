@@ -155,7 +155,7 @@ function Editor({ batch }: { batch: Batch }) {
             history stays available.
           </Body>
         )}
-        {error && <Problem message={error} />}
+        {!!error && <Problem message={error} />}
         <Button
           title={busy ? "Saving…" : "Confirm change"}
           onPress={() => void save()}
@@ -173,8 +173,8 @@ function Editor({ batch }: { batch: Batch }) {
       </Card>
       <Card>
         <Body>Stock history</Body>
-        {history.isPending && <Loading />}
-        {history.isError && <Problem message={messageOf(history.error)} />}
+        {!!history.isPending && <Loading />}
+        {!!history.isError && <Problem message={messageOf(history.error)} />}
         {history.data?.map((m) => (
           <Body key={m.id}>
             {m.reason}: {m.delta} {batch.base_unit} → {m.balance} ·{" "}

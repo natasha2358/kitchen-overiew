@@ -137,8 +137,8 @@ export function AccountScreen() {
             autoCapitalize="characters"
             editable={!busy}
           />
-          {error && <Problem message={error} />}{" "}
-          {notice && <Body>{notice}</Body>}
+          {!!error && <Problem message={error} />}
+          {!!notice && <Body>{notice}</Body>}
           <Button
             title={
               busy

@@ -185,9 +185,9 @@ function CookingEditor({
           explicitly confirmed, including staples. Nothing changes until you
           press Cooked.
         </Body>
-        {error && <Problem message={error} />}
+        {!!error && <Problem message={error} />}
         {!loaded && <Loading />}
-        {pending && (
+        {!!pending && (
           <>
             <Body>
               A previous cooking confirmation has an uncertain result. Retry its
@@ -200,7 +200,7 @@ function CookingEditor({
             />
           </>
         )}
-        {done && (
+        {!!done && (
           <>
             <Body>
               Cooking recorded: {done.movements.length} stock movements.
@@ -386,8 +386,8 @@ function CookingEditor({
       )}
       <Card>
         <Body>Recent cooking history</Body>
-        {history.isPending && <Loading />}
-        {history.isError && <Problem message={messageOf(history.error)} />}{" "}
+        {!!history.isPending && <Loading />}
+        {!!history.isError && <Problem message={messageOf(history.error)} />}
         {history.data?.length === 0 && <Body>No cooking recorded yet.</Body>}
         {history.data?.map((event) => (
           <Card key={event.id}>
@@ -466,8 +466,8 @@ function Review() {
     return <Problem message="Recipe unavailable." />;
   return (
     <>
-      {error && <Problem message={error} />}
-      {planned.data?.cooking_id && (
+      {!!error && <Problem message={error} />}
+      {!!planned.data?.cooking_id && (
         <Body>
           This plan has already been cooked. Retrying returns the recorded
           event; schedule another meal for a new cooking event.

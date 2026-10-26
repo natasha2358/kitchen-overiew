@@ -116,8 +116,8 @@ function Receipts() {
             disabled={busy || !online}
           />
         )}
-        {error && <Problem message={error} />}
-        {error && (
+        {!!error && <Problem message={error} />}
+        {!!error && (
           <Button
             title="Retry selected upload"
             onPress={() => void upload(true)}
@@ -125,8 +125,8 @@ function Receipts() {
           />
         )}
       </Card>
-      {receipts.isPending && <Loading />}
-      {receipts.isError && <Problem message={messageOf(receipts.error)} />}
+      {!!receipts.isPending && <Loading />}
+      {!!receipts.isError && <Problem message={messageOf(receipts.error)} />}
       {receipts.data?.length === 0 && <Body>No receipt drafts yet.</Body>}
       {receipts.data?.map((r) => (
         <Card key={r.id}>

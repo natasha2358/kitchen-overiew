@@ -72,7 +72,7 @@ function Editor({
           ? "Linked to a saved recipe. Actual quantities will be reviewed before cooking."
           : "Manual meal note. Add actual ingredients when you cook."}
       </Body>
-      {error && <Problem message={error} />}
+      {!!error && <Problem message={error} />}
       <Button
         title="Save plan"
         disabled={blocked}
@@ -153,9 +153,9 @@ function Board({
           }
           onPress={() => setShowCancelled((v) => !v)}
         />
-        {action.error && <Problem message={action.error} />}{" "}
-        {action.notice && <Body>{action.notice}</Body>}
-        {action.pending && (
+        {!!action.error && <Problem message={action.error} />}
+        {!!action.notice && <Body>{action.notice}</Body>}
+        {!!action.pending && (
           <Button
             title="Retry pending plan change"
             disabled={action.busy || !action.online}
@@ -163,8 +163,8 @@ function Board({
           />
         )}
       </Card>
-      {plans.isPending && <Loading />}
-      {plans.isError && <Problem message={messageOf(plans.error)} />}
+      {!!plans.isPending && <Loading />}
+      {!!plans.isError && <Problem message={messageOf(plans.error)} />}
       {Array.from({ length: 7 }, (_, offset) => addDays(start, offset)).map(
         (date) => {
           const entries = (plans.data ?? [])
@@ -202,7 +202,7 @@ function Board({
                           ? "Cancelled"
                           : "Planned — stock unchanged"}
                     </Body>
-                    {scalingError && !p.cooking_id && (
+                    {!!scalingError && !p.cooking_id && (
                       <Body>{scalingError}</Body>
                     )}
                     {!p.cooking_id && (

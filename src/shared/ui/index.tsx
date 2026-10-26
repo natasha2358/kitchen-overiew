@@ -38,7 +38,7 @@ export function Screen({
       <Text accessibilityRole="header" style={styles.title}>
         {title}
       </Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+      {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       {children}
     </ScrollView>
   );

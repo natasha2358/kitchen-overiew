@@ -47,13 +47,13 @@ function ProposalDetails({ proposed }: { proposed: unknown }) {
         AI proposed: {parsed.data.proposed_name ?? "Unresolved product"};{" "}
         {parsed.data.quantity ?? "Unknown quantity"} {parsed.data.unit ?? ""}
       </Body>
-      {parsed.data.quantity_evidence && (
+      {!!parsed.data.quantity_evidence && (
         <Body>Quantity source: {parsed.data.quantity_evidence}</Body>
       )}
-      {parsed.data.purchase_count && (
+      {!!parsed.data.purchase_count && (
         <Body>Proposed purchase count: {parsed.data.purchase_count}</Body>
       )}
-      {parsed.data.package_quantity && (
+      {!!parsed.data.package_quantity && (
         <Body>
           Proposed package size: {parsed.data.package_quantity}{" "}
           {parsed.data.package_unit}. Confirm the count and size before using a
@@ -269,7 +269,7 @@ export function ReceiptEditor({
     return (
       <Card>
         <Body>This PDF already has a canonical receipt.</Body>
-        {receipt.canonical_id && (
+        {!!receipt.canonical_id && (
           <Button
             title="Open original receipt"
             onPress={() =>
@@ -296,7 +296,7 @@ export function ReceiptEditor({
             ? "Unsaved changes — keep this screen open until saved."
             : "Draft loaded. Saving never changes inventory."}
         </Body>
-        {receipt.extraction && (
+        {!!receipt.extraction && (
           <Body>
             Processing: {receipt.extraction.status}; attempts{" "}
             {receipt.extraction.attempts}/2.
@@ -332,8 +332,8 @@ export function ReceiptEditor({
             />
           </>
         )}
-        {notice && <Body>{notice}</Body>}
-        {error && <Problem message={error} />}
+        {!!notice && <Body>{notice}</Body>}
+        {!!error && <Problem message={error} />}
         {receipt.revision > revision && (
           <Problem message="A newer saved review is available. Your edits have been kept. Reload it before making further changes." />
         )}
@@ -380,14 +380,14 @@ export function ReceiptEditor({
               disabled={busy || !online}
             />
           )}
-          {deleteRequested && (
+          {!!deleteRequested && (
             <Button
               title="Cancel deletion"
               onPress={() => setDeleteRequested(false)}
               disabled={busy}
             />
           )}
-          {receipt.confirmation && (
+          {!!receipt.confirmation && (
             <Body>
               Confirmed: {receipt.confirmation.batches.length} inventory
               batches. This receipt cannot be added twice.

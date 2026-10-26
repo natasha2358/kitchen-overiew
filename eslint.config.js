@@ -12,6 +12,12 @@ module.exports = defineConfig([
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
-    rules: { "@typescript-eslint/no-explicit-any": "error" },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "react/jsx-no-leaked-render": [
+        "error",
+        { validStrategies: ["coerce", "ternary"] },
+      ],
+    },
   },
 ]);

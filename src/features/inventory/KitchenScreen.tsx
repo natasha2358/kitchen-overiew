@@ -48,7 +48,7 @@ function Inventory() {
   );
   return (
     <>
-      {intent.data && (
+      {!!intent.data && (
         <Card>
           <Body>
             A previous stock request needs reconciliation. Retrying uses the
@@ -61,7 +61,7 @@ function Inventory() {
           />
         </Card>
       )}
-      {intentError && <Problem message={intentError} />}
+      {!!intentError && <Problem message={intentError} />}
       <Button
         title="Add groceries"
         onPress={() => router.push("/inventory/new")}
@@ -96,8 +96,8 @@ function Inventory() {
           onPress={() => setHistory(!history)}
         />
       </Card>
-      {inventory.isPending && <Loading />}
-      {inventory.isError && (
+      {!!inventory.isPending && <Loading />}
+      {!!inventory.isError && (
         <Card>
           <Problem message={messageOf(inventory.error)} />
           <Button

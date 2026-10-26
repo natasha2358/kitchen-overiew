@@ -193,7 +193,7 @@ function Catalog() {
             ))}
           </>
         )}
-        {error && <Problem message={error} />}
+        {!!error && <Problem message={error} />}
         <Button
           title="Save"
           onPress={() => void save()}

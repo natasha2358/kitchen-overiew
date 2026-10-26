@@ -37,7 +37,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       {!online && (
         <Problem message="You’re offline. Displayed information may be stale. Reconnect before making changes." />
       )}
-      {error && <Problem message={error} />}
+      {!!error && <Problem message={error} />}
       <Button
         title="Sign out"
         onPress={() => {
