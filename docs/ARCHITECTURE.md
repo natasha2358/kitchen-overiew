@@ -261,3 +261,7 @@ Portable proposal validation enforces decimal quantities, unit compatibility, wh
 Completion writes all proposal rows, original proposal JSON, source positions and metadata atomically. No product IDs, locations, expiry dates or inventory mutations come from the model. Names/quantities are editable prefilled suggestions; locations remain unresolved so confirmation requires explicit user review. The client shows original proposals and issues alongside edits, suggests existing name/alias matches without automatically selecting them, and blocks generation while local edits are dirty.
 
 Live configuration is server-only (`OPENAI_API_KEY`, `OPENAI_RECEIPT_MODEL`, optional `OPENAI_RECEIPT_VISION=true`). The test-only provider factory and fixture worker are outside production entrypoints and have no client-configurable URL/mock switch. Normal cloud startup excludes the fixture route; fixture startup cannot load live model settings. Mocked responses validate control flow, not real extraction quality.
+
+### Compact responsive interface
+
+Shared React Native UI primitives own spacing, typography, button emphasis, searchable inline choices and expandable secondary settings. Kitchen uses a list/detail layout above 960px, falling back to detail navigation on smaller screens or enlarged fonts. Local selection and form state do not replace TanStack Query or change stock transaction contracts. Product settings remain distinct from batch changes. Controls retain 48-point touch heights and wrapping text.

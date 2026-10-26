@@ -3,7 +3,7 @@ import { Fragment, ReactNode, useState } from "react";
 import { appConfig } from "../../shared/config";
 import { backend } from "../../shared/supabase";
 import { messageOf } from "../../shared/errors";
-import { Body, Button, Card, Loading, Problem } from "../../shared/ui";
+import { Body, Button, Card, Loading, Problem, Toolbar } from "../../shared/ui";
 import { AuthPanel } from "./AuthPanel";
 import { useAuth } from "./Providers";
 import { useHousehold } from "./useHousehold";
@@ -38,20 +38,22 @@ export function AuthGate({ children }: { children: ReactNode }) {
         <Problem message="You’re offline. Displayed information may be stale. Reconnect before making changes." />
       )}
       {!!error && <Problem message={error} />}
-      <Button
-        title="Sign out"
-        onPress={() => {
-          void backend()
-            .auth.signOut({ scope: "local" })
-            .then((result) => {
-              if (result.error) setError(messageOf(result.error));
-            });
-        }}
-      />
-      <Button
-        title="Account settings"
-        onPress={() => router.push("/account")}
-      />
+      <Toolbar>
+        <Button
+          title="Sign out"
+          onPress={() => {
+            void backend()
+              .auth.signOut({ scope: "local" })
+              .then((result) => {
+                if (result.error) setError(messageOf(result.error));
+              });
+          }}
+        />
+        <Button
+          title="Account settings"
+          onPress={() => router.push("/account")}
+        />
+      </Toolbar>
       {household.isError ? (
         <Card>
           <Problem message={messageOf(household.error)} />

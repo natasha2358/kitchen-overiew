@@ -183,3 +183,7 @@ These do not block documentation; resolve them at the named milestone before cla
 - One planned meal can link to only one cooking event, even when concurrent callers submit different operation IDs. Another intentional cooking requires a new plan or standalone cooking event.
 - Scale saved recipe quantities exactly for planned servings. Fractional items or values needing more than six decimal places require explicit manual quantity decisions, never silent rounding.
 - Preserve cancelled/cooked history and isolate all plan and recipe references by household. Cooked plans are immutable; actual usage remains available in cooking history.
+
+### UI refinement — compact ingredient management
+
+Inventory presents compact searchable rows with quantity, location and expiry, with desktop list/detail editing and mobile detail navigation. Common batch changes are grouped; less frequent actions are expandable and stock removal remains explicitly confirmed. Product settings are reachable for the selected ingredient. Forms use compact selectors instead of long lists of option buttons, retaining readable text, accessible selection state and comfortable touch targets.

@@ -7,6 +7,11 @@ import { z } from "zod";
 import { backend } from "../../shared/supabase";
 import { messageOf } from "../../shared/errors";
 import {
+  Choice,
+  Disclosure,
+  Heading,
+  Segments,
+  Toolbar,
   Body,
   Button,
   Card,
@@ -29,7 +34,13 @@ const historySchema = z.array(
     created_at: z.string(),
   }),
 );
-function Editor({ batch }: { batch: Batch }) {
+export function BatchEditor({
+  batch,
+  onSaved,
+}: {
+  batch: Batch;
+  onSaved?: () => void;
+}) {
   const h = useHousehold();
   const { online } = useAuth();
   const client = useQueryClient();
@@ -38,7 +49,7 @@ function Editor({ batch }: { batch: Batch }) {
   const [action, setAction] = useState<
     "add" | "adjust" | "waste" | "move" | "edit" | "remove"
   >("adjust");
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] = useState(batch.quantity);
   const [expiry, setExpiry] = useState(batch.expiry ?? "");
   const [location, setLocation] = useState(batch.location_id);
   const [busy, setBusy] = useState(false);
@@ -84,7 +95,8 @@ function Editor({ batch }: { batch: Batch }) {
         queryKey: ["history", h.data.id, batch.id],
       });
       pending.current = null;
-      router.replace("/");
+      if (onSaved) onSaved();
+      else router.replace({ pathname: "/", params: { saved: "1" } });
     } catch (e) {
       setError(messageOf(e));
     } finally {
@@ -103,26 +115,47 @@ function Editor({ batch }: { batch: Batch }) {
         <Body>
           {batch.location} · {batch.expiry ?? "Expiry unknown"}
         </Body>
-        {(["adjust", "add", "waste", "move", "edit", "remove"] as const).map(
-          (a) => (
+        <Heading>Batch settings</Heading>
+        <Segments
+          label="Change"
+          value={action}
+          disabled={busy}
+          onChange={(next) => {
+            setAction(next);
+            setQuantity(next === "adjust" ? batch.quantity : "");
+          }}
+          options={[
+            { value: "adjust", label: "Set quantity" },
+            { value: "add", label: "Add stock" },
+            { value: "move", label: "Move location" },
+            { value: "edit", label: "Edit expiry" },
+          ]}
+        />
+        <Disclosure title="More batch actions">
+          <Toolbar>
             <Button
-              key={a}
-              title={
-                (action === a ? "✓ " : "") +
-                {
-                  adjust: "Set remaining quantity",
-                  add: "Add to this batch",
-                  waste: "Record waste",
-                  move: "Move location",
-                  edit: "Edit expiry",
-                  remove: "Remove remaining stock",
-                }[a]
-              }
-              onPress={() => setAction(a)}
+              title="Record waste"
               disabled={busy}
+              onPress={() => {
+                setAction("waste");
+                setQuantity("");
+              }}
             />
-          ),
-        )}
+            <Button
+              title="Remove remaining stock"
+              variant="danger"
+              disabled={busy}
+              onPress={() => setAction("remove")}
+            />
+          </Toolbar>
+        </Disclosure>
+        <Body>
+          {action === "waste"
+            ? "Record waste"
+            : action === "remove"
+              ? "Remove remaining stock"
+              : "Review the value, then confirm your change."}
+        </Body>
         {["add", "adjust", "waste"].includes(action) && (
           <Field
             label={`Quantity (${batch.base_unit})`}
@@ -132,15 +165,21 @@ function Editor({ batch }: { batch: Batch }) {
             editable={!busy}
           />
         )}
-        {action === "move" &&
-          locations.data?.map((l) => (
-            <Button
-              key={l.id}
-              title={(location === l.id ? "✓ " : "") + l.name}
-              onPress={() => setLocation(l.id)}
-              disabled={busy}
-            />
-          ))}
+        {action === "move" && (
+          <Choice
+            label="Storage location"
+            value={location}
+            options={(locations.data ?? []).map((l) => ({
+              value: l.id,
+              label: l.name,
+            }))}
+            onChange={setLocation}
+            disabled={busy}
+          />
+        )}
+        {!!locations.isError && (
+          <Problem message={messageOf(locations.error)} />
+        )}
         {action === "edit" && (
           <Field
             label="Expiry (YYYY-MM-DD, blank for unknown)"
@@ -157,7 +196,14 @@ function Editor({ batch }: { batch: Batch }) {
         )}
         {!!error && <Problem message={error} />}
         <Button
-          title={busy ? "Saving…" : "Confirm change"}
+          variant={action === "remove" ? "danger" : "primary"}
+          title={
+            busy
+              ? "Saving…"
+              : action === "remove"
+                ? "Confirm removal of all remaining stock"
+                : "Confirm change"
+          }
           onPress={() => void save()}
           disabled={busy || !online}
         />
@@ -172,15 +218,33 @@ function Editor({ batch }: { batch: Batch }) {
         />
       </Card>
       <Card>
-        <Body>Stock history</Body>
-        {!!history.isPending && <Loading />}
-        {!!history.isError && <Problem message={messageOf(history.error)} />}
-        {history.data?.map((m) => (
-          <Body key={m.id}>
-            {m.reason}: {m.delta} {batch.base_unit} → {m.balance} ·{" "}
-            {new Date(m.created_at).toLocaleString()}
-          </Body>
-        ))}
+        <Heading>Product settings</Heading>
+        <Body>
+          Name, aliases and staple preferences apply to every batch of this
+          ingredient.
+        </Body>
+        <Button
+          title={`Edit product: ${batch.name}`}
+          onPress={() =>
+            router.push({
+              pathname: "/inventory/catalog",
+              params: { product: batch.product_id },
+            })
+          }
+          disabled={busy}
+        />
+      </Card>
+      <Card>
+        <Disclosure title="Stock history">
+          {!!history.isPending && <Loading />}
+          {!!history.isError && <Problem message={messageOf(history.error)} />}
+          {history.data?.map((m) => (
+            <Body key={m.id}>
+              {m.reason}: {m.delta} {batch.base_unit} → {m.balance} ·{" "}
+              {new Date(m.created_at).toLocaleString()}
+            </Body>
+          ))}
+        </Disclosure>
       </Card>
     </>
   );
@@ -193,7 +257,7 @@ function Detail() {
   if (inventory.isError)
     return <Problem message={messageOf(inventory.error)} />;
   return batch ? (
-    <Editor key={`${batch.id}:${batch.revision}`} batch={batch} />
+    <BatchEditor key={`${batch.id}:${batch.revision}`} batch={batch} />
   ) : (
     <Body>Batch unavailable in this kitchen.</Body>
   );

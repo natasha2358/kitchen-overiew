@@ -78,7 +78,7 @@ test("batch editor renders empty feedback without raw text children", async () =
   await render(<BatchDetail />);
   expect(screen.getByText("Confirm change")).toBeTruthy();
   await fireEvent.press(screen.getByText("Move location"));
-  expect(screen.getByText("Stock history")).toBeTruthy();
+  expect(screen.getByRole("button", { name: /Stock history/ })).toBeTruthy();
 });
 
 test("shopping renders empty feedback and shows validation errors inside text", async () => {

@@ -1,17 +1,39 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { pendingIntent, submitIntent } from "./intent";
 import { useState } from "react";
-import { useRouter } from "expo-router";
+import { useWindowDimensions } from "react-native";
+import { BatchEditor } from "./BatchDetail";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Decimal } from "decimal.js";
 import { AuthGate } from "../auth/AuthGate";
 import { useHousehold } from "../auth/useHousehold";
 import { useAuth } from "../auth/Providers";
-import { Body, Button, Card, Loading, Problem, Screen } from "../../shared/ui";
+import {
+  Body,
+  Button,
+  Card,
+  Loading,
+  Problem,
+  Screen,
+  Field,
+  Choice,
+  Toolbar,
+  Disclosure,
+  SplitPane,
+  ItemRow,
+  Heading,
+} from "../../shared/ui";
 import { messageOf } from "../../shared/errors";
 import { useInventory, useLocations } from "./api";
-import { expiryState, sumQuantities } from "./quantity";
+import { expiryState } from "./quantity";
 function Inventory() {
   const inventory = useInventory();
+  const { width, fontScale } = useWindowDimensions();
+  const wide = width >= 960 && fontScale <= 1.3;
+  const { saved } = useLocalSearchParams<{ saved?: string }>();
+  const [selected, setSelected] = useState("");
+  const [notice, setNotice] = useState("");
+  const [search, setSearch] = useState("");
   const locations = useLocations();
   const h = useHousehold();
   const router = useRouter();
@@ -44,8 +66,10 @@ function Inventory() {
   const batches = (inventory.data ?? []).filter(
     (b) =>
       (history || new Decimal(b.quantity).gt(0)) &&
-      (!filter || b.location_id === filter),
+      (!filter || b.location_id === filter) &&
+      b.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
   );
+  const batch = inventory.data?.find((b) => b.id === selected);
   return (
     <>
       {!!intent.data && (
@@ -62,39 +86,50 @@ function Inventory() {
         </Card>
       )}
       {!!intentError && <Problem message={intentError} />}
-      <Button
-        title="Add groceries"
-        onPress={() => router.push("/inventory/new")}
-        disabled={!online}
-      />
-      <Button
-        title="Import a receipt"
-        onPress={() => router.push("/receipts")}
-        disabled={!online}
-      />
-      <Button
-        title="Products and storage locations"
-        onPress={() => router.push("/inventory/catalog")}
-      />
+      {(saved === "1" || !!notice) && <Body>Stock change saved.</Body>}
+      <Toolbar>
+        <Button
+          variant="primary"
+          title="Add groceries"
+          onPress={() => router.push("/inventory/new")}
+          disabled={!online}
+        />
+        <Button
+          title="Import a receipt"
+          onPress={() => router.push("/receipts")}
+          disabled={!online}
+        />
+        <Button
+          title="Products and storage locations"
+          onPress={() => router.push("/inventory/catalog")}
+        />
+      </Toolbar>
       <Card>
-        <Body>Storage filter</Body>
-        <Button
-          title={filter ? "Show all locations" : "All locations selected"}
-          onPress={() => setFilter("")}
+        <Field
+          label="Search ingredients"
+          value={search}
+          onChangeText={setSearch}
         />
-        {locations.data?.map((l) => (
+        <Choice
+          label="Storage"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: "", label: "All locations" },
+            ...(locations.data ?? []).map((l) => ({
+              value: l.id,
+              label: l.name,
+            })),
+          ]}
+        />
+        <Disclosure title="More filters">
           <Button
-            key={l.id}
-            title={(filter === l.id ? "✓ " : "") + l.name}
-            onPress={() => setFilter(l.id)}
+            title={
+              history ? "Hide exhausted batches" : "Include exhausted batches"
+            }
+            onPress={() => setHistory(!history)}
           />
-        ))}
-        <Button
-          title={
-            history ? "Hide exhausted batches" : "Include exhausted batches"
-          }
-          onPress={() => setHistory(!history)}
-        />
+        </Disclosure>
       </Card>
       {!!inventory.isPending && <Loading />}
       {!!inventory.isError && (
@@ -113,43 +148,52 @@ function Inventory() {
           <Body>Add your first groceries, or choose a different filter.</Body>
         </Card>
       )}
-      {batches.map((b) => (
-        <Card key={b.id}>
-          <Body>{b.name}</Body>
-          <Body>
-            {new Decimal(b.quantity).toFixed()} {b.base_unit} · {b.location}
-          </Body>
-          <Body>
-            Product total:{" "}
-            {sumQuantities(
-              (inventory.data ?? [])
-                .filter((other) => other.product_id === b.product_id)
-                .map((other) => other.quantity),
-            )}{" "}
-            {b.base_unit}
-          </Body>
-          <Body>
-            {b.expiry
-              ? `Expiry ${b.expiry} · ${expiryState(b.expiry, h.data?.timezone ?? "UTC")}`
-              : "Expiry unknown"}
-          </Body>
-          <Button
-            title={`Manage ${b.name} batch`}
-            onPress={() =>
-              router.push({ pathname: "/inventory/[id]", params: { id: b.id } })
-            }
-          />
-        </Card>
-      ))}
+      <SplitPane
+        main={
+          <>
+            <Heading>{batches.length} batches</Heading>
+            {batches.map((b) => (
+              <ItemRow
+                key={b.id}
+                title={b.name}
+                trailing={`${new Decimal(b.quantity).toFixed()} ${b.base_unit}`}
+                subtitle={`${b.location} · ${b.expiry ? `${b.expiry} · ${expiryState(b.expiry, h.data?.timezone ?? "UTC")}` : "Expiry unknown"}`}
+                selected={!!wide && selected === b.id}
+                onPress={() => {
+                  if (wide) setSelected(b.id);
+                  else
+                    router.push({
+                      pathname: "/inventory/[id]",
+                      params: { id: b.id },
+                    });
+                }}
+              />
+            ))}
+          </>
+        }
+        detail={
+          wide ? (
+            batch ? (
+              <BatchEditor
+                key={`${batch.id}:${batch.revision}`}
+                batch={batch}
+                onSaved={() => setNotice("saved")}
+              />
+            ) : (
+              <Card>
+                <Heading>Ingredient details</Heading>
+                <Body>Select a batch to adjust stock, location or expiry.</Body>
+              </Card>
+            )
+          ) : null
+        }
+      />
     </>
   );
 }
 export function KitchenScreen() {
   return (
-    <Screen
-      title="Your kitchen"
-      subtitle="A little less waste. A little more possibility."
-    >
+    <Screen title="Your kitchen" subtitle="Your ingredients, at a glance">
       <AuthGate>
         <Inventory />
       </AuthGate>

@@ -1,25 +1,38 @@
+import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { backend } from "../../shared/supabase";
 import { messageOf } from "../../shared/errors";
-import { Body, Button, Card, Field, Problem, Screen } from "../../shared/ui";
+import {
+  Body,
+  Button,
+  Card,
+  Field,
+  Problem,
+  Screen,
+  Loading,
+} from "../../shared/ui";
 import { AuthGate } from "../auth/AuthGate";
 import { useAuth } from "../auth/Providers";
 import { useHousehold } from "../auth/useHousehold";
-import { useLocations, useProducts } from "./api";
-function Catalog() {
+import { productSchema, useLocations, useProducts } from "./api";
+function Catalog({ initial }: { initial?: z.infer<typeof productSchema> }) {
   const h = useHousehold();
   const products = useProducts();
   const locations = useLocations();
   const client = useQueryClient();
   const { online } = useAuth();
-  const [kind, setKind] = useState<"product" | "location">("location");
-  const [id, setId] = useState("");
-  const [name, setName] = useState("");
-  const [aliases, setAliases] = useState("");
-  const [unit, setUnit] = useState<"g" | "ml" | "item">("g");
-  const [staple, setStaple] = useState(false);
+  const [kind, setKind] = useState<"product" | "location">(
+    initial ? "product" : "location",
+  );
+  const [id, setId] = useState(initial?.id ?? "");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [aliases, setAliases] = useState(initial?.aliases.join(", ") ?? "");
+  const [unit, setUnit] = useState<"g" | "ml" | "item">(
+    initial?.base_unit ?? "g",
+  );
+  const [staple, setStaple] = useState(initial?.always_available ?? false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   async function save(remove = false) {
@@ -211,10 +224,21 @@ function Catalog() {
   );
 }
 export function CatalogScreen() {
+  const { product } = useLocalSearchParams<{ product?: string }>();
+  const products = useProducts();
   return (
     <Screen title="Your kitchen catalogue">
       <AuthGate>
-        <Catalog />
+        {product && products.isPending ? (
+          <Loading />
+        ) : product && products.isError ? (
+          <Problem message={messageOf(products.error)} />
+        ) : (
+          <Catalog
+            key={product ?? "catalog"}
+            initial={products.data?.find((p) => p.id === product)}
+          />
+        )}
       </AuthGate>
     </Screen>
   );
