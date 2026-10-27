@@ -119,6 +119,11 @@ export function BatchEditor({
           {batch.location} · {batch.expiry ?? "Expiry unknown"}
         </Body>
         <Heading>Batch settings</Heading>
+        <Button
+          title="Used up"
+          disabled={busy || !online || new Decimal(batch.quantity).isZero()}
+          onPress={() => setAction("remove")}
+        />
         <Segments
           label="Change"
           value={action}
@@ -144,19 +149,13 @@ export function BatchEditor({
                 setQuantity("");
               }}
             />
-            <Button
-              title="Remove remaining stock"
-              variant="danger"
-              disabled={busy}
-              onPress={() => setAction("remove")}
-            />
           </Toolbar>
         </Disclosure>
         <Body>
           {action === "waste"
             ? "Record waste"
             : action === "remove"
-              ? "Remove remaining stock"
+              ? "Mark this batch as used up"
               : "Review the value, then confirm your change."}
         </Body>
         {["add", "adjust", "waste"].includes(action) && (
@@ -193,18 +192,26 @@ export function BatchEditor({
         )}
         {action === "remove" && (
           <Body>
-            Confirming sets this batch to zero and records a removal. Its stock
-            history stays available.
+            You no longer have this batch of {batch.name}. Confirm to clear its
+            remaining stock and hide it from your active kitchen. Other batches
+            and stock history stay available.
           </Body>
+        )}
+        {action === "remove" && (
+          <Button
+            title="Cancel used up"
+            onPress={() => setAction("adjust")}
+            disabled={busy}
+          />
         )}
         {!!error && <Problem message={error} />}
         <Button
-          variant={action === "remove" ? "danger" : "primary"}
+          variant="primary"
           title={
             busy
               ? "Saving…"
               : action === "remove"
-                ? "Confirm removal of all remaining stock"
+                ? "Confirm used up"
                 : "Confirm change"
           }
           onPress={() => void save()}

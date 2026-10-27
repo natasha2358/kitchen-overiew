@@ -160,3 +160,5 @@ Shopping has a list/editor layout on desktop; Planner uses responsive day column
 `npm run test:ui` runs Chromium against the local test Supabase instance with disposable users and inventory. It requires the Supabase CLI (`SUPABASE_BIN` can select its path), a running local test backend (the cloud setup is sufficient), Chromium (`CHROMIUM_PATH`, default `/usr/bin/chromium`), and free port 8091. `playwright-core` is a development-only dependency and does not download a browser. The script starts/stops Expo, checks desktop/mobile-web interactions and saves fictional-data screenshots in ignored `.ui-artifacts/`; it removes its own test household through account erasure. It does not call AI or touch a hosted project. Use the documented cloud Expo cache environment overrides when needed.
 
 These checks do not replace physical Android, TalkBack, enlarged-font or keyboard acceptance testing.
+
+**Finished an ingredient?** Open its batch, choose **Used up**, then **Confirm used up**. No quantity entry is required. Only that batch disappears from active stock; other batches and history remain. Sign-out and account settings are now inside **Account menu**.

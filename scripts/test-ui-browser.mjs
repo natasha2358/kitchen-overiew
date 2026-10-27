@@ -115,6 +115,15 @@ try {
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.getByRole("button", { name: /Brown rice, 500 g/ }).waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: "Sign out", exact: true }).count(),
+    0,
+  );
+  await page.getByRole("button", { name: /Account menu/ }).click();
+  await page
+    .getByRole("button", { name: "Account settings", exact: true })
+    .waitFor();
+  await page.getByRole("button", { name: /Account menu/ }).click();
   await page.screenshot({ path: `${artifacts}kitchen-desktop.png` });
   await page.getByRole("button", { name: /Brown rice, 500 g/ }).click();
   await page.getByRole("heading", { name: "Batch settings" }).waitFor();
@@ -161,13 +170,11 @@ try {
   );
   await page.getByRole("button", { name: /Brown rice, 500 g/ }).click();
   await page.getByRole("heading", { name: "Batch settings" }).waitFor();
-  await page.getByRole("button", { name: /More batch actions/ }).click();
-  await page
-    .getByRole("button", { name: "Remove remaining stock", exact: true })
-    .click();
+
+  await page.getByRole("button", { name: "Used up", exact: true }).click();
   await page
     .getByRole("button", {
-      name: "Confirm removal of all remaining stock",
+      name: "Confirm used up",
       exact: true,
     })
     .waitFor();
@@ -179,11 +186,25 @@ try {
     "choosing removal must not mutate stock",
   );
   await page.screenshot({ path: `${artifacts}kitchen-detail-mobile.png` });
+  await page
+    .getByRole("button", { name: "Confirm used up", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Search ingredients", exact: true })
+    .waitFor();
+  assert.equal(
+    ok(await api.rpc("get_inventory", { p_household: h })).find(
+      (b) => b.name === "Brown rice",
+    ).quantity,
+    "0.000000",
+  );
+  assert.equal(
+    await page.getByRole("button", { name: /Brown rice, 500 g/ }).count(),
+    0,
+  );
   for (const route of ["shopping", "planner", "recipes", "receipts"]) {
     await page.goto(`http://localhost:8091/${route}`);
-    await page
-      .getByRole("button", { name: "Account settings", exact: true })
-      .waitFor();
+    await page.getByRole("button", { name: /Account menu/ }).waitFor();
     await page.waitForTimeout(500);
     assert.equal(
       await page.evaluate(

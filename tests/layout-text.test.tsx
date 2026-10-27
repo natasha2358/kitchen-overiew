@@ -95,19 +95,12 @@ test("shopping renders empty feedback and shows validation errors inside text", 
 
 test("choosing removal does not mutate stock until its explicit confirmation", async () => {
   await render(<BatchDetail />);
-  expect(
-    screen.queryByRole("button", { name: "Remove remaining stock" }),
-  ).toBeNull();
-  await fireEvent.press(
-    screen.getByRole("button", { name: /More batch actions/ }),
-  );
-  await fireEvent.press(
-    screen.getByRole("button", { name: "Remove remaining stock" }),
-  );
+  await fireEvent.press(screen.getByRole("button", { name: "Used up" }));
+  expect(screen.queryByLabelText("Quantity (g)")).toBeNull();
   expect(mockSubmit).not.toHaveBeenCalled();
   await fireEvent.press(
     screen.getByRole("button", {
-      name: "Confirm removal of all remaining stock",
+      name: "Confirm used up",
     }),
   );
   expect(mockSubmit).toHaveBeenCalledWith(
@@ -119,4 +112,12 @@ test("choosing removal does not mutate stock until its explicit confirmation", a
       revision: 1,
     }),
   );
+});
+
+test("cancelling used up preserves the batch and its quantity editor", async () => {
+  await render(<BatchDetail />);
+  await fireEvent.press(screen.getByRole("button", { name: "Used up" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Cancel used up" }));
+  expect(mockSubmit).not.toHaveBeenCalled();
+  expect(screen.getByLabelText("Quantity (g)").props.value).toBe("500");
 });
